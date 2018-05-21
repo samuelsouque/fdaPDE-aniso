@@ -17,7 +17,7 @@ R -e "library(devtools); document()" --silent
 
 To install the package from the Github repository, use the command `install_github` from the 
 R package `devtools` as follows:
-`install_github("NegriLuca/fdaPDE-manifold")`
+`install_github("samuelsouque/fdaPDE-aniso")`
 
 ## Examples
 
