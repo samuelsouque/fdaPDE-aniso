@@ -150,4 +150,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
     return result;
 }
 
+template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
+constexpr std::array<Real, 70> AnisotropicSmoothingBase<Derived, InputHandler, Integrator, ORDER>::lambdaCrossVal_;
+
 #endif
