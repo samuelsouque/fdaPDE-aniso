@@ -30,9 +30,20 @@ const VectorXr HBase<Derived, InputHandler, Integrator, ORDER>::fHat(const TVect
     regression.apply();
     const std::vector<VectorXr> & solution = regression.getSolution();
     
+    std::vector<Point> locations;
+    if (regressionData_.isLocationsByNodes()) {
+        const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
+        locations.reserve(observationsIndices.size());
+        for (UInt i = 0; i < observationsIndices.size(); i++) {
+            locations[i] = mesh_.getPoint(observationsIndices[i]);
+        }
+    } else {
+        locations = regressionData_.getLocations();
+    }
+
     // Return the evaluation of the coefficients at the data points
     EvaluatorExt<ORDER> evaluator(mesh_);
-    const VectorXr result = evaluator.eval(solution, locations_);
+    const VectorXr result = evaluator.eval(solution, locations);
 
     return result;
 }
@@ -58,14 +69,14 @@ Eigen::Matrix<Real, 2, 2> HBase<Derived, InputHandler, Integrator, ORDER>::build
 template <typename Integrator, UInt ORDER>
 struct H<RegressionDataElliptic, Integrator, ORDER> : public HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER> {
         using typename HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>::TVector;
-        H(const MeshHandler<ORDER, 2, 2> & mesh, const RegressionDataElliptic & regressionData, const std::vector<Point> & locations) : HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>(mesh, regressionData, locations) {}
+        H(const MeshHandler<ORDER, 2, 2> & mesh, const RegressionDataElliptic & regressionData) : HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>(mesh, regressionData) {}
         RegressionDataElliptic createRegressionData(const TVector & x) const;
 };
 
 template <typename Integrator, UInt ORDER>
 RegressionDataElliptic H<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const TVector & x) const {
     // Copy members of regressionData to pass them to its constructor
-    std::vector<Point> empty = H::regressionData_.getLocations();
+    std::vector<Point> locations  = H::regressionData_.getLocations();
     VectorXr observations = H::regressionData_.getObservations();
     Eigen::Matrix<Real, 2, 2> kappa = H::buildKappa(x);
     Eigen::Matrix<Real, 2, 1> beta = H::regressionData_.getBeta();
@@ -75,7 +86,7 @@ RegressionDataElliptic H<RegressionDataElliptic, Integrator, ORDER>::createRegre
 
     // Construct a new regressionData object with the desired kappa
     const RegressionDataElliptic data(
-            empty,
+            locations,
             observations,
             H::regressionData_.getOrder(),
             H::regressionData_.getLambda(),

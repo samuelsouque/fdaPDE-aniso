@@ -7,7 +7,7 @@ const MatrixXr EvaluatorExt<ORDER>::eval(const std::vector<VectorXr> & solution,
     const std::vector<Point>::size_type numLoc = locations.size();
     const std::vector<VectorXr>::size_type numSol = solution.size();
 
-    // Pointer
+    // Pointers
     Real * X = new Real[numLoc];
     Real * Y = new Real[numLoc];
     Real * coef = new Real[numNodes_];

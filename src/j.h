@@ -22,13 +22,12 @@ class J {
         const MeshHandler<ORDER, 2, 2> & mesh_;
         const InputHandler & regressionData_;
         MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regression_;
-        const std::vector<Point> & locations_;
 
     public:
 		/**
 		 * @detail The constructor solves the optimization of the functional J using the fdaPDE package
 		 */
-        J(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData, const std::vector<Point> & locations);
+        J(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData);
 
 		/**
 		 * @return The solution coefficients of the FEM basis functions for fHat.

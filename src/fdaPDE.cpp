@@ -119,29 +119,15 @@ SEXP FPCA_skeleton(FPCAData &fPCAData, SEXP Rmesh,std::string validation)
 }
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-SEXP anisotropic_regression_skeleton(SEXP Rmesh, InputHandler & regressionData, SEXP Rlambda, SEXP Rlocations) {
+SEXP anisotropic_regression_skeleton(InputHandler & regressionData, SEXP Rmesh) {
     using TVector = typename H<InputHandler, Integrator, ORDER>::TVector;
-    MeshHandler<ORDER, 2, 2> mesh(Rmesh);
-
-    // Convert Rlambda into C++ object
-    Real * ptr_lambda = REAL(Rlambda);
-    std::vector<Real> lambda;
-    lambda.assign(ptr_lambda, ptr_lambda+Rf_length(Rlambda));
-
-    // Convert Rlocations into C++ object
-    UInt length = INTEGER(Rf_getAttrib(Rlocations, R_DimSymbol))[0];
-    Real * loc = REAL(Rlocations);
-    std::vector<Point> locations;
-    locations.reserve(length);
-    for (UInt i=0; i<length; i++) {
-        locations.emplace_back(loc[i/* + length*0*/], loc[i + length*1]);
-    }
+    const MeshHandler<ORDER, 2, 2> mesh(Rmesh);
 
 	/* Execute the main algorithm and store the results:
 			1) The vector of coefficients
 			2) The anisotropy matrix K
 	*/
-    const AnisotropicSmoothing<InputHandler, Integrator, ORDER> anisoSmooth(mesh, regressionData, lambda, locations);
+    const AnisotropicSmoothing<InputHandler, Integrator, ORDER> anisoSmooth(regressionData, mesh);
 
     const std::pair<const std::vector<VectorXr>, const TVector> & solution = anisoSmooth.smooth();
     const std::vector<VectorXr> & coefs = std::get<0>(solution);
@@ -168,6 +154,7 @@ SEXP anisotropic_regression_skeleton(SEXP Rmesh, InputHandler & regressionData, 
     UNPROTECT(1);
     return result;
 }
+
 template<typename Integrator, UInt ORDER, UInt mydim, UInt ndim>
 SEXP get_integration_points_skeleton(SEXP Rmesh)
 {
@@ -447,16 +434,16 @@ SEXP Smooth_FPCA(SEXP Rlocations, SEXP Rdatamatrix, SEXP Rmesh, SEXP Rorder, SEX
 	return(NILSXP);
 	 }      
 
-SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RlambdaCrossVal, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP RGCVmethod, SEXP Rnrealizations) {
-    RegressionDataElliptic regressionData(Rf_allocMatrix(REALSXP, 0, 2), Robservations, Rorder, RlambdaCrossVal, RK, Rbeta, Rc, Rcovariates, RBCIndices, RBCValues, Rf_ScalarLogical(0), RGCVmethod, Rnrealizations);
+SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP RGCVmethod, SEXP Rnrealizations) {
+    RegressionDataElliptic regressionData(Rf_allocMatrix(REALSXP, 0, 2), Robservations, Rorder, Rlambda, RK, Rbeta, Rc, Rcovariates, RBCIndices, RBCValues, Rf_ScalarLogical(0), RGCVmethod, Rnrealizations);
 
     UInt mydim = Rf_asInteger(Rmydim);
     UInt ndim = Rf_asInteger(Rndim);
 
     if (regressionData.getOrder() == 1 && ndim == 2 && mydim == 2) {
-        return anisotropic_regression_skeleton<RegressionDataElliptic, IntegratorTriangleP2, 1>(Rmesh, regressionData, Rlambda, Rlocations);
+        return anisotropic_regression_skeleton<RegressionDataElliptic, IntegratorTriangleP2, 1>(regressionData, Rmesh);
     } else if (regressionData.getOrder() == 2 && ndim == 2 && mydim == 2) {
-        return anisotropic_regression_skeleton<RegressionDataElliptic, IntegratorTriangleP4, 2>(Rmesh, regressionData, Rlambda, Rlocations);
+        return anisotropic_regression_skeleton<RegressionDataElliptic, IntegratorTriangleP4, 2>(regressionData, Rmesh);
     } else {
         return R_NilValue;
     }

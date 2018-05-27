@@ -5,7 +5,7 @@
 #include "mesh_objects.h"
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-J<InputHandler, Integrator, ORDER>::J(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData, const std::vector<Point> & locations) : mesh_(mesh), regressionData_(regressionData), regression_(mesh_, regressionData_), locations_(locations) {
+J<InputHandler, Integrator, ORDER>::J(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData) : mesh_(mesh), regressionData_(regressionData), regression_(mesh_, regressionData_) {
     regression_.apply();
 }
 
@@ -23,10 +23,21 @@ template <typename InputHandler, typename Integrator, UInt ORDER>
 VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
     const std::vector<VectorXr> & solution = getSolution();
 
+    std::vector<Point> locations;
+    if (regressionData_.isLocationsByNodes()) {
+        const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
+        locations.reserve(observationsIndices.size());
+        for (UInt i = 0; i < observationsIndices.size(); i++) {
+            locations[i] = mesh_.getPoint(observationsIndices[i]);
+        }
+    } else {
+        locations = regressionData_.getLocations();
+    }
+
     EvaluatorExt<ORDER> evaluator(mesh_);
-    const MatrixXr & fnhat = evaluator.eval(solution, locations_);
+    const MatrixXr & fnhat = evaluator.eval(solution, locations);
     
-    Real np = locations_.size();
+    Real np = locations.size();
     const std::vector<Real> & edf = getDOF();
 
     for (std::size_t i=0; i<edf.size(); i++) {

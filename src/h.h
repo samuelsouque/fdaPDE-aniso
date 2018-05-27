@@ -23,7 +23,6 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
     protected:
         const MeshHandler<ORDER, 2, 2> & mesh_;
         const InputHandler & regressionData_;
-        const std::vector<Point> & locations_;
 
 		/**
 		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
@@ -40,10 +39,9 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
 		/**
 		 * @param mesh TODO
 		 * @param regressionData
-		 * @param locations
 		 */
         using typename cppoptlib::BoundedProblem<Real, 2>::TVector;
-        HBase(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData, const std::vector<Point> & locations) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000)), mesh_(mesh), regressionData_(regressionData), locations_(locations) {}
+        HBase(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000)), mesh_(mesh), regressionData_(regressionData) {}
 
 		/**
 		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
@@ -61,7 +59,7 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
 template <typename InputHandler, typename Integrator, UInt ORDER>
 struct H : public HBase<H<InputHandler, Integrator, ORDER>, InputHandler, Integrator, ORDER> {
         using typename HBase<H, InputHandler, Integrator, ORDER>::TVector;
-        H(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData, const std::vector<Point> & locations) : HBase<H, InputHandler, Integrator, ORDER>(mesh, regressionData, locations) {}
+        H(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData) : HBase<H, InputHandler, Integrator, ORDER>(mesh, regressionData) {}
 
         Real value(const TVector & x) {
             REprintf("Option not implemented\n");

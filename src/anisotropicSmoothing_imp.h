@@ -8,16 +8,16 @@
 
 template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
 std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator, ORDER>::TVector> AnisotropicSmoothingBase<Derived, InputHandler, Integrator, ORDER>::smooth() const {
-    std::vector<Real>::size_type n_lambda = lambda_.size();
-    std::vector<TVector, Eigen::aligned_allocator<TVector>> kSmooth(n_lambda, TVector(M_PI_2, 5.));
-    std::vector<Eigen::Index> rhoSmoothInd(n_lambda);
-    std::vector<Real> gcvSmooth(n_lambda);
+    constexpr std::array<Real, 70>::size_type n_crossVal = lambdaCrossVal_.size();
+    std::vector<TVector, Eigen::aligned_allocator<TVector>> kSmooth(n_crossVal, TVector(M_PI_2, 5.));
+    std::vector<Eigen::Index> rhoSmoothInd(n_crossVal);
+    std::vector<Real> gcvSmooth(n_crossVal);
 
     #pragma omp parallel for
-    for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
+    for(std::array<Real, 70>::size_type i = 0U; i < n_crossVal; i++) {
         // Optimization of H
-        InputHandler dataUniqueLambda = createRegressionData(lambda_[i]);
-        H<InputHandler, Integrator, ORDER> h(mesh_, dataUniqueLambda, locations_);
+        InputHandler dataUniqueLambda = createRegressionData(lambdaCrossVal_[i]);
+        H<InputHandler, Integrator, ORDER> h(mesh_, dataUniqueLambda);
 
         cppoptlib::LbfgsbSolver<H<InputHandler, Integrator, ORDER>> solver;
         solver.minimize(h, kSmooth[i]);
@@ -36,7 +36,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 
         // Computation of the GCV for current k
         InputHandler dataSelectedK = createRegressionData(kSmooth[i], true);
-        J<InputHandler, Integrator, ORDER> j(mesh_, dataSelectedK, locations_);
+        J<InputHandler, Integrator, ORDER> j(mesh_, dataSelectedK);
         
         VectorXr gcvSeq = j.getGCV();
         Eigen::Index rhoIndex;
@@ -63,7 +63,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 template <typename Integrator, UInt ORDER>
 struct AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER> : public AnisotropicSmoothingBase<AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER> {
         using typename AnisotropicSmoothingBase<AnisotropicSmoothing, RegressionDataElliptic, Integrator, ORDER>::TVector;
-        AnisotropicSmoothing(const MeshHandler<ORDER, 2, 2> & mesh, const RegressionDataElliptic & regressionData, const std::vector<Real> & lambda, const std::vector<Point> & locations) : AnisotropicSmoothingBase<AnisotropicSmoothing, RegressionDataElliptic, Integrator, ORDER>(mesh, regressionData, lambda, locations) {}
+        AnisotropicSmoothing(const RegressionDataElliptic & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : AnisotropicSmoothingBase<AnisotropicSmoothing, RegressionDataElliptic, Integrator, ORDER>(regressionData, mesh) {}
 
         RegressionDataElliptic createRegressionData(const Real & lambda) const;
         RegressionDataElliptic createRegressionData(const TVector & k, const bool dof) const;
@@ -72,7 +72,7 @@ struct AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER> : public 
 
 template <typename Integrator, UInt ORDER>
 RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const Real & lambda) const {
-    std::vector<Point> empty = AnisotropicSmoothing::regressionData_.getLocations();
+    std::vector<Point> locations = AnisotropicSmoothing::regressionData_.getLocations();
     VectorXr observations = AnisotropicSmoothing::regressionData_.getObservations();
     std::vector<Real> uniqueLambda(1U, lambda);
     Eigen::Matrix<Real, 2, 2> kappa;
@@ -82,7 +82,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
     std::vector<Real> dirichletValues = AnisotropicSmoothing::regressionData_.getDirichletValues();
 
     const RegressionDataElliptic result(
-            empty,
+            locations,
             observations,
             AnisotropicSmoothing::regressionData_.getOrder(),
             uniqueLambda,
@@ -99,7 +99,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
 
 template <typename Integrator, UInt ORDER>
 RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const TVector & k, const bool dof) const {
-    std::vector<Point> empty = AnisotropicSmoothing::regressionData_.getLocations();
+    std::vector<Point> locations = AnisotropicSmoothing::regressionData_.getLocations();
     VectorXr observations = AnisotropicSmoothing::regressionData_.getObservations();
     Eigen::Matrix<Real, 2, 2> kappa = H<RegressionDataElliptic, Integrator, ORDER>::buildKappa(k);
     Eigen::Matrix<Real, 2, 1> beta = AnisotropicSmoothing::regressionData_.getBeta();
@@ -108,7 +108,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
     std::vector<Real> dirichletValues = AnisotropicSmoothing::regressionData_.getDirichletValues();
 
     const RegressionDataElliptic result(
-            empty,
+            locations,
             observations,
             AnisotropicSmoothing::regressionData_.getOrder(),
             AnisotropicSmoothing::regressionData_.getLambda(),
@@ -125,7 +125,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
 
 template <typename Integrator, UInt ORDER>
 RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const Real & lambda, const TVector & k) const {
-    std::vector<Point> empty = AnisotropicSmoothing::regressionData_.getLocations();
+    std::vector<Point> locations = AnisotropicSmoothing::regressionData_.getLocations();
     VectorXr observations = AnisotropicSmoothing::regressionData_.getObservations();
     std::vector<Real> uniqueLambda(1U, lambda);
     Eigen::Matrix<Real, 2, 2> kappa = H<RegressionDataElliptic, Integrator, ORDER>::buildKappa(k);
@@ -135,7 +135,7 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
     std::vector<Real> dirichletValues = AnisotropicSmoothing::regressionData_.getDirichletValues();
 
     const RegressionDataElliptic result(
-            empty,
+            locations,
             observations,
             AnisotropicSmoothing::regressionData_.getOrder(),
             uniqueLambda,
