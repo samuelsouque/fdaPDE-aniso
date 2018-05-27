@@ -434,8 +434,8 @@ SEXP Smooth_FPCA(SEXP Rlocations, SEXP Rdatamatrix, SEXP Rmesh, SEXP Rorder, SEX
 	return(NILSXP);
 	 }      
 
-SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP RGCVmethod, SEXP Rnrealizations) {
-    RegressionDataElliptic regressionData(Rf_allocMatrix(REALSXP, 0, 2), Robservations, Rorder, Rlambda, RK, Rbeta, Rc, Rcovariates, RBCIndices, RBCValues, Rf_ScalarLogical(0), RGCVmethod, Rnrealizations);
+SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP DOF, SEXP RGCVmethod, SEXP Rnrealizations) {
+    RegressionDataElliptic regressionData(Rlocations, Robservations, Rorder, Rlambda, RK, Rbeta, Rc, Rcovariates, RBCIndices, RBCValues, DOF, RGCVmethod, Rnrealizations);
 
     UInt mydim = Rf_asInteger(Rmydim);
     UInt ndim = Rf_asInteger(Rndim);
