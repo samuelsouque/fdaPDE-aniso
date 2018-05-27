@@ -23,7 +23,7 @@ MeshHandler<ORDER,2,2>::MeshHandler(SEXP mesh)
 #endif
 
 template <UInt ORDER>
-Point MeshHandler<ORDER,2,2>::getPoint(Id id)
+Point MeshHandler<ORDER,2,2>::getPoint(Id id) const
 {
 	Point point(id, Identifier::NVAL, points_[id], points_[num_nodes_+id]);
 	return point;
@@ -270,7 +270,7 @@ void MeshHandler<ORDER,2,3>::importfromCSV(std::string &filename){
 
 
 template <UInt ORDER>
-Point MeshHandler<ORDER,2,3>::getPoint(Id id)
+Point MeshHandler<ORDER,2,3>::getPoint(Id id) const
 {
 	Point point(id, Identifier::NVAL, points_[id], points_[id+1],points_[id+2]);
 	return point;
@@ -352,7 +352,7 @@ MeshHandler<ORDER,3,3>::MeshHandler(SEXP mesh)
 
 
 template <UInt ORDER>
-Point MeshHandler<ORDER,3,3>::getPoint(Id id)
+Point MeshHandler<ORDER,3,3>::getPoint(Id id) const
 {
 	Point point(id, Identifier::NVAL, points_[id], points_[id+1],points_[id+2],points_[id+3]);
 	return point;

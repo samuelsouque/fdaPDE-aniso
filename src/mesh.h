@@ -61,7 +61,7 @@ public:
      * \param id an Id argument
       \return The point with the specified id
     */
-    Point getPoint(Id id);
+    Point getPoint(Id id) const;
 
     //! A normal member returning an Edge
     /*!
