@@ -28,7 +28,9 @@ VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
         const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
         locations.reserve(observationsIndices.size());
         for (UInt i = 0; i < observationsIndices.size(); i++) {
-            locations[i] = mesh_.getPoint(observationsIndices[i]);
+            Id id = observationsIndices[i];
+            Point point = mesh_.getPoint(id);
+            locations.push_back(point);
         }
     } else {
         locations = regressionData_.getLocations();
