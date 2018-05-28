@@ -448,4 +448,19 @@ SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh,
         return R_NilValue;
     }
 }
+
+SEXP anisotropic_regression_PDE_space_varying(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Ru, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP DOF, SEXP RGCVmethod, SEXP Rnrealizations) {
+    RegressionDataEllipticSpaceVarying regressionData(Rlocations, Robservations, Rorder, Rlambda, RK, Rbeta, Rc, Ru, Rcovariates, RBCIndices, RBCValues, DOF,  RGCVmethod, Rnrealizations);
+
+    UInt mydim = Rf_asInteger(Rmydim);
+    UInt ndim = Rf_asInteger(Rndim);
+
+    if (regressionData.getOrder() == 1 && ndim == 2 && mydim == 2) {
+        return anisotropic_regression_skeleton<RegressionDataEllipticSpaceVarying, IntegratorTriangleP2, 1>(regressionData, Rmesh);
+    } else if (regressionData.getOrder() == 2 && ndim == 2 && mydim == 2) {
+        return anisotropic_regression_skeleton<RegressionDataEllipticSpaceVarying, IntegratorTriangleP4, 2>(regressionData, Rmesh);
+    } else {
+        return R_NilValue;
+    }
+}
 }
