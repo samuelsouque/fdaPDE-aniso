@@ -28,19 +28,8 @@ class J {
 		 * @detail The constructor solves the optimization of the functional J using the fdaPDE package
 		 */
         J(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData);
-
-		/**
-		 * @return The solution coefficients of the FEM basis functions for fHat.
-		 */
-        const std::vector<VectorXr> & getSolution() const;
-
-		/**
-		 * @return The vector of DOF for each value of regressionData_.getLambda()
-		 * @detail In the paper \cite Bernardi, DOF corresponds to tr(S) (p.14)
-		 */
-        const std::vector<Real> & getDOF() const;
-
-		/**
+		
+        /**
 		 * @return The vector of GCV indexes for each value of regressionData_.getLambda()
 		 */
         VectorXr getGCV() const;

@@ -13,11 +13,6 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     std::vector<Eigen::Index> crossValSmoothInd(n_lambda);
     std::vector<Real> gcvSmooth(n_lambda);
 
-    Rprintf("n_lambdaCrossVal = %d\n", lambdaCrossVal_.size());
-    for (std::vector<Real>::size_type i = 0U; i < lambdaCrossVal_.size(); i++) {
-        Rprintf("lambdaCrossVal[%2d] = %f\n", i, lambdaCrossVal_[i]);
-    }
-
     #pragma omp parallel for
     for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
         // Optimization of H
@@ -39,13 +34,12 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
             REprintf("Angle equal to 0 at iteration = %3u\n", i);
         }
     
-        Rprintf("anisoParamSmooth[%d] = (%f, %f)\n", i, anisoParamSmooth[i](0), anisoParamSmooth[i](1));
-
         // Computation of the GCV for current anisoParamSmooth[i]
         InputHandler dataSelectedK = createRegressionData(anisoParamSmooth[i]);
         J<InputHandler, Integrator, ORDER> j(mesh_, dataSelectedK);
         
         VectorXr gcvSeq = j.getGCV();
+
         Eigen::Index lambdaCrossValIndex;
         Real gcv = gcvSeq.minCoeff(&lambdaCrossValIndex);
 
@@ -54,18 +48,9 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 
     }
 
-    for (std::vector<Real>::size_type i = 0U; i < gcvSmooth.size(); i++) {
-        Rprintf("gcvSmooth[%2d] = %f; crossValSmoothInd[%2d] = %d\n", i, gcvSmooth[i], i, crossValSmoothInd[i]);
-    }
-
     // Choosing the best anisotropy matrix and lambda coefficient
     std::vector<Real>::const_iterator minIterator = std::min_element(gcvSmooth.cbegin(), gcvSmooth.cend());
     std::vector<Real>::difference_type optIndex = std::distance(gcvSmooth.cbegin(), minIterator);
-
-    Rprintf("Selected optIndex = %d\n", optIndex);
-    Rprintf("Selected crossValSmoothInd = %f\n", crossValSmoothInd[optIndex]);
-    Rprintf("Selected anisoParam = (%f, %f)\n", anisoParamSmooth[optIndex](0), anisoParamSmooth[optIndex](1));
-    Rprintf("Selected lambdaCrossVal = %f\n", lambdaCrossVal_[crossValSmoothInd[optIndex]]);
 
     InputHandler regressionDataFinal = createRegressionData(lambdaCrossVal_[crossValSmoothInd[optIndex]], anisoParamSmooth[optIndex]);
     MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regressionFinal(mesh_, regressionDataFinal);
@@ -107,7 +92,9 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
             covariates,
             dirichletIndices,
             dirichletValues,
-            AnisotropicSmoothing::regressionData_.computeDOF());
+            AnisotropicSmoothing::regressionData_.computeDOF(),
+            AnisotropicSmoothing::regressionData_.getGCVmethod(),
+            AnisotropicSmoothing::regressionData_.getNrealizations());
 
     return result;
 }
@@ -133,7 +120,9 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
             covariates,
             dirichletIndices,
             dirichletValues,
-            true); // Sets DOF_ = true to compute the GCV
+            true, // Sets DOF_ = true to compute the GCV
+            AnisotropicSmoothing::regressionData_.getGCVmethod(),
+            AnisotropicSmoothing::regressionData_.getNrealizations());
 
     return result;
 }
@@ -160,7 +149,9 @@ RegressionDataElliptic AnisotropicSmoothing<RegressionDataElliptic, Integrator, 
             covariates,
             dirichletIndices,
             dirichletValues,
-            AnisotropicSmoothing::regressionData_.computeDOF());
+            AnisotropicSmoothing::regressionData_.computeDOF(),
+            AnisotropicSmoothing::regressionData_.getGCVmethod(),
+            AnisotropicSmoothing::regressionData_.getNrealizations());
 
     return result;
 }

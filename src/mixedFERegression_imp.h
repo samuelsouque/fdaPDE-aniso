@@ -364,6 +364,12 @@ void MixedFERegressionBase<InputHandler,Integrator,ORDER,mydim,ndim>::computeDeg
 		case 2:
 			computeDegreesOfFreedomStochastic(output_index, lambda);
 			break;
+        default:
+            #ifdef R_VERSION_
+                REprintf("Invalid GCV method to call computeDegreesOfFreedom\n");
+            #else
+                std::cerr << "Invalid GCV method to call computeDegreesOfFreedom" << std::endl;
+            #endif
 	}
 }
 

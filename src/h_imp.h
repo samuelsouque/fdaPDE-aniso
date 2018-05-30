@@ -98,7 +98,9 @@ RegressionDataElliptic H<RegressionDataElliptic, Integrator, ORDER>::createRegre
             covariates,
             dirichletIndices,
             dirichletValues,
-            H::regressionData_.computeDOF());
+            H::regressionData_.computeDOF(),
+            H::regressionData_.getGCVmethod(),
+            H::regressionData_.getNrealizations());
     return data;
 }
 #endif

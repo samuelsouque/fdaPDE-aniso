@@ -10,22 +10,11 @@ J<InputHandler, Integrator, ORDER>::J(const MeshHandler<ORDER, 2, 2> & mesh, con
 }
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-const std::vector<VectorXr> & J<InputHandler, Integrator, ORDER>::getSolution() const {
-    return regression_.getSolution();
-}
-
-template <typename InputHandler, typename Integrator, UInt ORDER>
-const std::vector<Real> & J<InputHandler, Integrator, ORDER>::getDOF() const {
-    return regression_.getDOF();
-}
-
-template <typename InputHandler, typename Integrator, UInt ORDER>
 VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
-    const std::vector<VectorXr> & solution = getSolution();
+    const std::vector<VectorXr> & solution = regression_.getSolution();
 
     std::vector<Point> locations;
     if (regressionData_.isLocationsByNodes()) {
-        Rprintf("J: regressionData_.getObservationsIndices().size() = %d\n", regressionData_.getObservationsIndices().size());
         const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
         locations.reserve(observationsIndices.size());
         for (UInt i = 0; i < observationsIndices.size(); i++) {
@@ -36,15 +25,12 @@ VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
     } else {
         locations = regressionData_.getLocations();
     }
-    Rprintf("J: locations.size() = %d\n", locations.size());
-    for (std::vector<Real>::size_type i = 0U; i < regressionData_.getLambda().size(); i++) {
-        Rprintf("J: lambdaCrossVal[%2d] = %f\n", i, regressionData_.getLambda()[i]);
-    }
+    
     EvaluatorExt<ORDER> evaluator(mesh_);
     const MatrixXr & fnhat = evaluator.eval(solution, locations);
     
     Real np = locations.size();
-    const std::vector<Real> & edf = getDOF();
+    const std::vector<Real> & edf = regression_.getDOF();
 
     auto test_inconsistent = [&np] (const Real & edf) -> bool { return (np - edf <= 0); };
     std::vector<Real>::const_iterator any_inconsistent = std::find_if(edf.cbegin(), edf.cend(), test_inconsistent);
@@ -61,9 +47,6 @@ VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
     const ArrayXXr quotient = np / (np - Eigen::Map<const ArrayXr>(edf.data(), edf.size())).pow(2);
 
     VectorXr gcv = (quotient * (diff.transpose() * diff).diagonal().array()).matrix();
-    for (Eigen::Index i = 0U; i < gcv.size(); i++) {
-        Rprintf("J: gcv[%2i] = %f\n", i, gcv(i));
-    }
 
     return gcv;
 }
