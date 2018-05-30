@@ -1,9 +1,9 @@
 #ifndef __REGRESSIONDATA_IMP_HPP__
 #define __REGRESSIONDATA_IMP_HPP__
 
-RegressionData::RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF):
+RegressionData::RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
 					locations_(locations), observations_(observations), covariates_(covariates), order_(order), lambda_(lambda),
-					bc_values_(bc_values), bc_indices_(bc_indices), DOF_(DOF)
+					bc_values_(bc_values), bc_indices_(bc_indices), DOF_(DOF), GCVmethod_(GCVmethod), nrealizations_(nrealizations)
 {
 	if(locations_.size()==0)
 	{
@@ -17,13 +17,13 @@ RegressionData::RegressionData(std::vector<Point>& locations, VectorXr& observat
 }
 
 RegressionDataElliptic::RegressionDataElliptic(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, Eigen::Matrix<Real,2,2>& K,	Eigen::Matrix<Real,2,1>& beta,
-		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF):
-		 RegressionData(locations, observations, order, lambda, covariates , bc_indices, bc_values, DOF), K_(K), beta_(beta), c_(c)
+		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
+		 RegressionData(locations, observations, order, lambda, covariates , bc_indices, bc_values, DOF, GCVmethod, nrealizations), K_(K), beta_(beta), c_(c)
 {;}
 
 RegressionDataEllipticSpaceVarying::RegressionDataEllipticSpaceVarying(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, const std::vector<Eigen::Matrix<Real,2,2>, Eigen::aligned_allocator<Eigen::Matrix<Real,2,2> > >& K,	const std::vector<Eigen::Matrix<Real,2,1>, Eigen::aligned_allocator<Eigen::Matrix<Real,2,1> > >& beta,
-		const std::vector<Real>& c, const std::vector<Real>& u, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF):
-		RegressionData(locations, observations, order, lambda, covariates , bc_indices, bc_values, DOF), K_(K), beta_(beta), c_(c), u_(u)
+		const std::vector<Real>& c, const std::vector<Real>& u, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
+		RegressionData(locations, observations, order, lambda, covariates , bc_indices, bc_values, DOF, GCVmethod, nrealizations), K_(K), beta_(beta), c_(c), u_(u)
 {;}
 
 

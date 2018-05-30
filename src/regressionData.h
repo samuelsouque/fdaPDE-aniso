@@ -83,7 +83,7 @@ class  RegressionData{
 				   SEXP RBCIndices, SEXP RBCValues, SEXP DOF,SEXP RGCVmethod, SEXP Rnrealizations);
 		#endif
 
-		explicit RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF);
+		explicit RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
 
 
 		void printObservations(std::ostream & out) const;
@@ -132,7 +132,7 @@ class  RegressionDataElliptic:public RegressionData
 		#endif
 
 		explicit RegressionDataElliptic(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, Eigen::Matrix<Real,2,2>& K,	Eigen::Matrix<Real,2,1>& beta,
-		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF);
+		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
 
 		inline Eigen::Matrix<Real,2,2> const & getK() const {return K_;}
 		inline Eigen::Matrix<Real,2,1> const & getBeta() const {return beta_;}
@@ -155,7 +155,7 @@ class RegressionDataEllipticSpaceVarying:public RegressionData
 
 
 		explicit RegressionDataEllipticSpaceVarying(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, const std::vector<Eigen::Matrix<Real,2,2>, Eigen::aligned_allocator<Eigen::Matrix<Real,2,2> > >& K,	const std::vector<Eigen::Matrix<Real,2,1>, Eigen::aligned_allocator<Eigen::Matrix<Real,2,1> > >& beta,
-				const std::vector<Real>& c, const std::vector<Real>& u, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF);
+				const std::vector<Real>& c, const std::vector<Real>& u, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
 
 		inline Diffusivity const & getK() const {return K_;}
 		inline Advection const & getBeta() const {return beta_;}
