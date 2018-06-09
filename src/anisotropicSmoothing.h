@@ -49,11 +49,11 @@ class AnisotropicSmoothingBase {
             return static_cast<const Derived*>(this)->createRegressionData(lambda, anisoParam);
         }
 
-        std::vector<Real> seq(const Real & start, const Real & end, const Real & b) const;
+        std::vector<Real> seq(const UInt & n_obs, const Real & area) const;
 
     public:
-        AnisotropicSmoothingBase(const InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : regressionData_(regressionData), mesh_(mesh), lambdaCrossVal_(seq(1e-7, 1e-1, 0.1)) {}
-
+        AnisotropicSmoothingBase(const InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : regressionData_(regressionData), mesh_(mesh), lambdaCrossVal_(seq(regressionData.getNumberofObservations(),mesh.getArea())) {};
+      
 		/**
 		 * @brief executes the anisotropic smoothing algorithm for the problem described in the class attributes
 		 * @return the first element of the pair is the vector of solution coefficients, the second element is the estimated anisotropy matrix
@@ -67,6 +67,7 @@ class AnisotropicSmoothingBase {
  */
 template <typename InputHandler, typename Integrator, UInt ORDER>
 struct AnisotropicSmoothing : public AnisotropicSmoothingBase<AnisotropicSmoothing<InputHandler, Integrator, ORDER>, InputHandler, Integrator, ORDER> {
+  
         using TVector = typename AnisotropicSmoothingBase<AnisotropicSmoothing, InputHandler, Integrator, ORDER>::TVector;
 
         AnisotropicSmoothing(const InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : AnisotropicSmoothingBase<AnisotropicSmoothing, InputHandler, Integrator, ORDER>(regressionData, mesh) {}

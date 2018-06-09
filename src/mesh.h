@@ -83,6 +83,11 @@ public:
       \return The element with order coerent to that of the mesh with the specified id
     */ 
     Element<3*ORDER,2,2>  getElement(Id id) const;
+    
+    /*! A normal member returning a Real
+     * \return The area of the mesh
+     */
+    Real getArea() const;
 
     //The "number" neighbor of element i is opposite the "number" corner of element i
     //! A normal member returning the Neighbors of a element
@@ -96,7 +101,7 @@ public:
 
     void printPoints(std::ostream & out);
     void printEdges(std::ostream & out);
-    void printElements(std::ostream & out);
+    void printElements(std::ostream & out) const;
     void printNeighbors(std::ostream & out);
 
      //! A normal member returning the element on which a point is located

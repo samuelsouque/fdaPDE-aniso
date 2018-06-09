@@ -18,6 +18,8 @@ MeshHandler<ORDER,2,2>::MeshHandler(SEXP mesh)
 	num_nodes_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 0), R_DimSymbol))[0];
 	num_edges_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 6), R_DimSymbol))[0];
 	num_elements_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 3), R_DimSymbol))[0];
+	Rprintf("num_elements_d = %d\n", num_elements_);
+	Rprintf("num_elements_u = %u\n", num_elements_);
 
 }
 #endif
@@ -37,6 +39,19 @@ Edge MeshHandler<ORDER,2,2>::getEdge(Id id)
 	Edge edge(id, Identifier::NVAL, Point(id_start_point, Identifier::NVAL, points_[id_start_point], points_[num_nodes_+id_start_point]),
 						Point(id_end_point, Identifier::NVAL, points_[id_end_point], points_[num_nodes_+id_end_point]));
 	return edge;
+}
+
+template <UInt ORDER>
+Real MeshHandler<ORDER,2,2>::getArea() const
+{
+  Real area = 0.0;
+  for(UInt i=0; i<num_elements_; ++i)
+  {
+    Element<3*ORDER,2,2> current_elem;
+    current_elem = getElement(i);
+    area += current_elem.getArea();
+  }
+  return area;
 }
 
 template <UInt ORDER>
@@ -150,7 +165,7 @@ void MeshHandler<ORDER,2,2>::printEdges(std::ostream & out)
 }
 
 template <UInt ORDER>
-void MeshHandler<ORDER,2,2>::printElements(std::ostream & out)
+void MeshHandler<ORDER,2,2>::printElements(std::ostream & out) const
 {
 
 	out << "# Triangles: "<< num_elements_ <<std::endl;
