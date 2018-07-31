@@ -5,82 +5,83 @@
 #include "mixedFERegression.h"
 #include "mesh_objects.h"
 
-template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
-Real HBase<Derived, InputHandler, Integrator, ORDER>::value(const TVector & x) {
-    TVector k = x.cwiseMax(TVector(0., 1.)).cwiseMin(TVector(M_PI, 1000));
+#include <chrono>
 
+template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
+Real HBase<Derived, InputHandler, Integrator, ORDER>::value(const TVector & anisoParam) {
     /*Calculating fHat*/
-    VectorXr estimations = fHat(k);
+    VectorXr estimations = fHat(anisoParam);
 
     /* Calculating H */
     estimations -= regressionData_.getObservations();
     Real H = estimations.squaredNorm();
 
-    if (k!=x) {
-        H += 1000 * (k - x).squaredNorm();
-    }
     return H;
 }
 
 template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
-const VectorXr HBase<Derived, InputHandler, Integrator, ORDER>::fHat(const TVector & x) const {
-    const InputHandler & data = createRegressionData(x);
+const VectorXr HBase<Derived, InputHandler, Integrator, ORDER>::fHat(const TVector & anisoParam) const {
+    ///const InputHandler & data = createRegressionData(anisoParam);
+    regressionData_.setK(buildKappa(anisoParam));
     // Compute the regression coefficients
-    MixedFERegression<RegressionDataElliptic, Integrator, ORDER, 2, 2> regression(mesh_, data);
+    MixedFERegression<RegressionDataElliptic, Integrator, ORDER, 2, 2> regression(mesh_, regressionData_);
     regression.apply();
     const std::vector<VectorXr> & solution = regression.getSolution();
-
-    std::vector<Point> locations;
+    
+    /*std::vector<Point> locations;
     if (regressionData_.isLocationsByNodes()) {
         const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
         locations.reserve(observationsIndices.size());
-        for (UInt i = 0; i < observationsIndices.size(); i++) {
+        for (std::vector<UInt>::size_type i = 0U; i < observationsIndices.size(); i++) {
             Id id = observationsIndices[i];
             Point point = mesh_.getPoint(id);
             locations.push_back(point);
         }
     } else {
         locations = regressionData_.getLocations();
-    }
+    }*/
 
     // Return the evaluation of the coefficients at the data points
     EvaluatorExt<ORDER> evaluator(mesh_);
-    const VectorXr result = evaluator.eval(solution, locations);
+    const VectorXr result = evaluator.eval(solution, regressionData_.isLocationsByNodes() ? meshLoc_ : regressionData_.getLocations());
 
     return result;
 }
 
 template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
-Eigen::Matrix<Real, 2, 2> HBase<Derived, InputHandler, Integrator, ORDER>::buildKappa(const TVector & x) {
-    // x[0] is the angle α (alpha)
-    // x[1] is the intensity γ (gamma)
+Eigen::Matrix<Real, 2, 2> HBase<Derived, InputHandler, Integrator, ORDER>::buildKappa(const TVector & anisoParam) {
+    // Building K from anisoParam as an Eigen matrix
+    // anisoParam[0] is the angle α (alpha)
+    // anisoParam[1] is the intensity γ (gamma)
 
-    //Building K from x as an Eigen matrix
     Eigen::Matrix<Real,2,2> Q;
-    Q << std::cos(x[0]), -std::sin(x[0]),
-      std::sin(x[0]), std::cos(x[0]);
+    Q << std::cos(anisoParam(0)), -std::sin(anisoParam(0)), 
+          std::sin(anisoParam(0)), std::cos(anisoParam(0));
 
     Eigen::Matrix<Real,2,2> Sigma;
-    Sigma << 1/std::sqrt(x[1]), 0,
-          0, x[1]/std::sqrt(x[1]);
+    // Deal with invalid intensity argument
+    Real intensity = std::abs(anisoParam(1));
+    Sigma << 1/std::sqrt(intensity), 0., 
+          0., intensity/std::sqrt(intensity);
 
-    const Eigen::Matrix<Real, 2, 2> Kappa = Q * Sigma * Q.inverse();
+    // Kappa = Q * Sigma * Q.inverse()
+    Eigen::Matrix<Real, 2, 2> Kappa = Q * Sigma * Q.inverse();
     return Kappa;
 }
 
 template <typename Integrator, UInt ORDER>
 struct H<RegressionDataElliptic, Integrator, ORDER> : public HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER> {
         using typename HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>::TVector;
-        H(const MeshHandler<ORDER, 2, 2> & mesh, const RegressionDataElliptic & regressionData) : HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>(mesh, regressionData) {}
-        RegressionDataElliptic createRegressionData(const TVector & x) const;
+        H(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, RegressionDataElliptic & regressionData) : HBase<H<RegressionDataElliptic, Integrator, ORDER>, RegressionDataElliptic, Integrator, ORDER>(mesh, meshLoc, regressionData) {}
+        RegressionDataElliptic createRegressionData(const TVector & anisoParam) const;
 };
 
 template <typename Integrator, UInt ORDER>
-RegressionDataElliptic H<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const TVector & x) const {
+RegressionDataElliptic H<RegressionDataElliptic, Integrator, ORDER>::createRegressionData(const TVector & anisoParam) const {
     // Copy members of regressionData to pass them to its constructor
     std::vector<Point> locations  = H::regressionData_.getLocations();
     VectorXr observations = H::regressionData_.getObservations();
-    Eigen::Matrix<Real, 2, 2> kappa = H::buildKappa(x);
+    Eigen::Matrix<Real, 2, 2> kappa = H::buildKappa(anisoParam);
     Eigen::Matrix<Real, 2, 1> beta = H::regressionData_.getBeta();
     MatrixXr covariates = H::regressionData_.getCovariates();
     std::vector<UInt> dirichletIndices = H::regressionData_.getDirichletIndices();

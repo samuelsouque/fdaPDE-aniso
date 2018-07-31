@@ -21,10 +21,14 @@
 template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
 class AnisotropicSmoothingBase {
     protected:
-        const std::vector<Real> lambdaCrossVal_;
         using TVector = typename H<InputHandler, Integrator, ORDER>::TVector;
+
+        InputHandler & regressionData_;
         const MeshHandler<ORDER, 2, 2> & mesh_;
-        const InputHandler & regressionData_;
+        const std::vector<Point> meshLoc_;
+        const std::vector<Real> lambda_;
+        const std::vector<Real> lambdaCrossVal_;
+        bool dof_;
 
     private:
 
@@ -52,8 +56,22 @@ class AnisotropicSmoothingBase {
         std::vector<Real> seq(const UInt & n_obs, const Real & area) const;
 
     public:
-        AnisotropicSmoothingBase(const InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : regressionData_(regressionData), mesh_(mesh), lambdaCrossVal_(seq(regressionData.getNumberofObservations(),mesh.getArea())) {};
-      
+        AnisotropicSmoothingBase(InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : regressionData_(regressionData), mesh_(mesh), meshLoc_(computeMeshLoc()), lambda_(regressionData_.getLambda()), lambdaCrossVal_(seq(regressionData.getNumberofObservations(), mesh.getArea())), dof_(regressionData_.computeDOF()) {}
+
+        std::vector<Point> computeMeshLoc() {
+            std::vector<Point> locations;
+            if (regressionData_.isLocationsByNodes()) {
+                const std::vector<UInt> & observationsIndices = regressionData_.getObservationsIndices();
+                locations.reserve(observationsIndices.size());
+                for (std::vector<UInt>::size_type i = 0U; i < observationsIndices.size(); i++) {
+                    Id id = observationsIndices[i];
+                    Point point = mesh_.getPoint(id);
+                    locations.push_back(point);
+                }
+            }
+            return locations;
+        }
+
 		/**
 		 * @brief executes the anisotropic smoothing algorithm for the problem described in the class attributes
 		 * @return the first element of the pair is the vector of solution coefficients, the second element is the estimated anisotropy matrix
@@ -70,7 +88,7 @@ struct AnisotropicSmoothing : public AnisotropicSmoothingBase<AnisotropicSmoothi
   
         using TVector = typename AnisotropicSmoothingBase<AnisotropicSmoothing, InputHandler, Integrator, ORDER>::TVector;
 
-        AnisotropicSmoothing(const InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : AnisotropicSmoothingBase<AnisotropicSmoothing, InputHandler, Integrator, ORDER>(regressionData, mesh) {}
+        AnisotropicSmoothing(InputHandler & regressionData, const MeshHandler<ORDER, 2, 2> & mesh) : AnisotropicSmoothingBase<AnisotropicSmoothing, InputHandler, Integrator, ORDER>(regressionData, mesh) {}
 		
         std::pair<const std::vector<VectorXr>, const TVector> smooth() const {
             REprintf("Anisotropic smoothing not implemented for such an input handler\n");

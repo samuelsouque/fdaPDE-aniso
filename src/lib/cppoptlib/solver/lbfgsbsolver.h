@@ -1,4 +1,7 @@
 // CppNumericalSolver
+// based on:
+// L-BFGS-B: A LIMITED MEMORY ALGORITHM FOR BOUND CONSTRAINED OPTIMIZATION
+// Richard H. Byrd, Peihuang Lu, Jorge Nocedal and Ciyou Zhu
 #include <iostream>
 #include <list>
 #include <Eigen/LU>
@@ -130,8 +133,7 @@ class LbfgsbSolver : public ISolver<TProblem, 1> {
     }
     dt_min = std::max(dt_min, (Scalar)0.0);
     t_old += dt_min;
-    // Disabling OpenMP to avoid creation of new threads
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int ii = i; ii < x_cauchy.rows(); ii++) {
       x_cauchy(sortedIndices[ii]) = x(sortedIndices[ii]) + t_old * d(sortedIndices[ii]);
     }

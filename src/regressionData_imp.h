@@ -1,7 +1,7 @@
 #ifndef __REGRESSIONDATA_IMP_HPP__
 #define __REGRESSIONDATA_IMP_HPP__
 
-RegressionData::RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
+RegressionData::RegressionData(const std::vector<Point>& locations, const VectorXr& observations, UInt order, const std::vector<Real>& lambda, const MatrixXr& covariates , const std::vector<UInt>& bc_indices, const std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
 					locations_(locations), observations_(observations), covariates_(covariates), order_(order), lambda_(lambda),
 					bc_values_(bc_values), bc_indices_(bc_indices), DOF_(DOF), GCVmethod_(GCVmethod), nrealizations_(nrealizations)
 {
@@ -16,8 +16,8 @@ RegressionData::RegressionData(std::vector<Point>& locations, VectorXr& observat
 	}
 }
 
-RegressionDataElliptic::RegressionDataElliptic(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, Eigen::Matrix<Real,2,2>& K,	Eigen::Matrix<Real,2,1>& beta,
-		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
+RegressionDataElliptic::RegressionDataElliptic(const std::vector<Point>& locations, const VectorXr& observations, UInt order, const std::vector<Real>& lambda, const Eigen::Matrix<Real,2,2>& K, const Eigen::Matrix<Real,2,1>& beta,
+		Real c, const MatrixXr& covariates , const std::vector<UInt>& bc_indices, const std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations):
 		 RegressionData(locations, observations, order, lambda, covariates , bc_indices, bc_values, DOF, GCVmethod, nrealizations), K_(K), beta_(beta), c_(c)
 {;}
 

@@ -57,7 +57,7 @@ CPP_aniso.smooth.FEM.PDE.basis <- function(locations, observations, FEMbasis, la
   return(bigsol)
 }
 
-CPP_aniso.smooth.FEM.PDE.sv.basis<-function(locations, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, ndim, mydim, BC = NULL, GCV, GCVmethod = 2, nrealizations = 100)
+CPP_aniso.smooth.FEM.PDE.sv.basis<-function(locations, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, ndim, mydim, BC = NULL, GCV, GCVmethod, nrealizations)
 {
   # Indexes in C++ starts from 0, in R from 1, opportune transformation
   ##TO BE CHANGED SOON: LOW PERFORMANCES, IMPLIES COPY OF PARAMETERS
@@ -120,6 +120,6 @@ CPP_aniso.smooth.FEM.PDE.sv.basis<-function(locations, observations, FEMbasis, l
   storage.mode(GCVmethod) <- "integer"
   
   ## Call C++ function
-  bigsol <- .Call("anisotropic_regression_PDE_space_varying", locations, observations, FEMbasis$mesh, FEMbasis$order,mydim, ndim, lambda, PDE_param_eval$K, PDE_param_eval$b, PDE_param_eval$c, PDE_param_eval$u, covariates, BC$BC_indices, BC$BC_values, GCV,GCVmethod, nrealizations, PACKAGE = "fdaPDE")
+  bigsol <- .Call("anisotropic_regression_PDE_space_varying", locations, observations, FEMbasis$mesh, FEMbasis$order,mydim, ndim, lambda, PDE_param_eval$K, PDE_param_eval$b, PDE_param_eval$c, PDE_param_eval$u, covariates, BC$BC_indices, BC$BC_values, GCV, GCVmethod, nrealizations, PACKAGE = "fdaPDE")
   return(bigsol)
 }

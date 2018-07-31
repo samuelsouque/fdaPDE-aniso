@@ -22,7 +22,8 @@ template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
 class HBase : public cppoptlib::BoundedProblem<Real, 2> {
     protected:
         const MeshHandler<ORDER, 2, 2> & mesh_;
-        const InputHandler & regressionData_;
+        const std::vector<Point> & meshLoc_;
+        InputHandler & regressionData_;
 
 		/**
 		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
@@ -41,7 +42,7 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
 		 * @param regressionData
 		 */
         using typename cppoptlib::BoundedProblem<Real, 2>::TVector;
-        HBase(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000)), mesh_(mesh), regressionData_(regressionData) {}
+        HBase(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, InputHandler & regressionData) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000.)), mesh_(mesh), meshLoc_(meshLoc), regressionData_(regressionData) {}
 
 		/**
 		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
@@ -54,12 +55,15 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
 		 * @return The value of the functional H(K). \cite Bernardi.
 		 */
         Real value(const TVector & x);
+        void gradient(const TVector & x, TVector & grad) {
+            finiteGradient(x, grad, 0);
+        }
 };
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
 struct H : public HBase<H<InputHandler, Integrator, ORDER>, InputHandler, Integrator, ORDER> {
         using typename HBase<H, InputHandler, Integrator, ORDER>::TVector;
-        H(const MeshHandler<ORDER, 2, 2> & mesh, const InputHandler & regressionData) : HBase<H, InputHandler, Integrator, ORDER>(mesh, regressionData) {}
+        H(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, InputHandler & regressionData) : HBase<H, InputHandler, Integrator, ORDER>(mesh, meshLoc, regressionData) {}
 
         Real value(const TVector & x) {
             REprintf("Option not implemented\n");

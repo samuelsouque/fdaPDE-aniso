@@ -29,7 +29,7 @@
 #' plot(smoothing_aniso$fit.FEM)
 #' 
 #' 
-aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, BC = NULL, GCV = FALSE, CPP_CODE = TRUE, GCVmethod = 2, nrealizations = 100) {
+aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, BC = NULL, GCV = FALSE, CPP_CODE = TRUE, GCVmethod = 1, nrealizations = 100) {
   if (class(FEMbasis$mesh) == "MESH2D") {
     ndim = 2
     mydim = 2
@@ -73,7 +73,7 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
     if (GCV) {
       message('Anisotropic smoothing called with GCV = TRUE leads to useless calculations')
     }
-    print('C++ Code Execution')
+    # print('C++ Code Execution')
     bigsol = CPP_aniso.smooth.FEM.PDE.basis(locations, observations, FEMbasis, lambda, PDE_parameters, covariates, ndim, mydim, BC, GCV, GCVmethod, nrealizations)
   }
   
@@ -96,7 +96,7 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   return(reslist)
 }
 
-aniso.smooth.FEM.PDE.sv.basis <- function(locations = NULL, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, BC = NULL, GCV = FALSE, CPP_CODE = TRUE, GCVmethod = 2, nrealizations = 100) {
+aniso.smooth.FEM.PDE.sv.basis <- function(locations = NULL, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, BC = NULL, GCV = FALSE, CPP_CODE = TRUE, GCVmethod = 1, nrealizations = 100) {
   if (class(FEMbasis$mesh) == "MESH2D") {
     ndim = 2
     mydim = 2

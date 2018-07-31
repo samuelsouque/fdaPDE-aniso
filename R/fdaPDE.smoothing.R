@@ -252,7 +252,7 @@ smooth.FEM.PDE.basis<-function(locations = NULL, observations, FEMbasis, lambda,
     print('Function implemented only in C++, turn CPP_CODE = TRUE')  
   }else
   {
-    print('C++ Code Execution')
+    # print('C++ Code Execution')
     bigsol = CPP_smooth.FEM.PDE.basis(locations, observations, FEMbasis, lambda, PDE_parameters, covariates,ndim, mydim, BC, GCV,GCVmethod, nrealizations)
   }
   

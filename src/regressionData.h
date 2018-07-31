@@ -83,7 +83,7 @@ class  RegressionData{
 				   SEXP RBCIndices, SEXP RBCValues, SEXP DOF,SEXP RGCVmethod, SEXP Rnrealizations);
 		#endif
 
-		explicit RegressionData(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
+		explicit RegressionData(const std::vector<Point>& locations, const VectorXr& observations, UInt order, const std::vector<Real>& lambda, const MatrixXr& covariates , const std::vector<UInt>& bc_indices, const std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
 
 
 		void printObservations(std::ostream & out) const;
@@ -115,6 +115,11 @@ class  RegressionData{
 		inline UInt const & getGCVmethod() const {return GCVmethod_;}
 		//! A method returning the number of vectors to use to stochastically estimate the edf
 		inline UInt const & getNrealizations() const {return nrealizations_;}
+
+        // A method to set the DOF computation
+        inline void setComputeDOF(const bool dof) {DOF_ = dof;}
+        // A method to set the penalization terms
+        inline void setLambda(const std::vector<Real>& lambda) {lambda_ = lambda;}
 };
 
 
@@ -131,12 +136,14 @@ class  RegressionDataElliptic:public RegressionData
 				 SEXP Rc, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP DOF,SEXP RGCVmethod, SEXP Rnrealizations);
 		#endif
 
-		explicit RegressionDataElliptic(std::vector<Point>& locations, VectorXr& observations, UInt order, std::vector<Real> lambda, Eigen::Matrix<Real,2,2>& K,	Eigen::Matrix<Real,2,1>& beta,
-		Real c, MatrixXr& covariates , std::vector<UInt>& bc_indices, std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
+		explicit RegressionDataElliptic(const std::vector<Point>& locations, const VectorXr& observations, UInt order, const std::vector<Real>& lambda, const Eigen::Matrix<Real,2,2>& K,	const Eigen::Matrix<Real,2,1>& beta,
+		Real c, const MatrixXr& covariates , const std::vector<UInt>& bc_indices, const std::vector<Real>& bc_values, bool DOF, UInt GCVmethod, UInt nrealizations);
 
 		inline Eigen::Matrix<Real,2,2> const & getK() const {return K_;}
 		inline Eigen::Matrix<Real,2,1> const & getBeta() const {return beta_;}
 		inline Real const getC() const {return c_;}
+
+        inline void setK(const Eigen::Matrix<Real, 2, 2> & K) {K_ = K;}
 };
 
 class RegressionDataEllipticSpaceVarying:public RegressionData
