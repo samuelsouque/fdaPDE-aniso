@@ -2,16 +2,16 @@
 #define __EVALUATOR_EXT_IMP_H__
 
 template <UInt ORDER>
-const MatrixXr EvaluatorExt<ORDER>::eval(const std::vector<VectorXr> & solution, const std::vector<Point> & locations) {
+const MatrixXr EvaluatorExt<ORDER>::eval(const std::vector<VectorXr> &solution, const std::vector<Point> &locations) {
     // Sizes
     const std::vector<Point>::size_type numLoc = locations.size();
     const std::vector<VectorXr>::size_type numSol = solution.size();
 
     // Pointers
-    Real * X = new Real[numLoc];
-    Real * Y = new Real[numLoc];
-    Real * coef = new Real[numNodes_];
-    Real * res = new Real[numLoc];
+    Real *X = new Real[numLoc];
+    Real *Y = new Real[numLoc];
+    Real *coef = new Real[numNodes_];
+    Real *res = new Real[numLoc];
     std::vector<bool> isInside(numLoc);
 
     // Bind the vector of 2D points into x and y's coordinates arrays

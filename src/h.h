@@ -18,23 +18,18 @@
  *	@details We use the cppoptlib library for its LBFGSB algorithm.
  *		The class H inheritates from a cppoptlib class for compatibility reasons with cppoptlib.
  */
-template <class Derived, typename InputHandler, typename Integrator, UInt ORDER>
-class HBase : public cppoptlib::BoundedProblem<Real, 2> {
-    protected:
-        const MeshHandler<ORDER, 2, 2> & mesh_;
-        const std::vector<Point> & meshLoc_;
-        InputHandler & regressionData_;
+template <typename InputHandler, typename Integrator, UInt ORDER>
+class H : public cppoptlib::BoundedProblem<Real, 2> {
+    private:
+        const MeshHandler<ORDER, 2, 2> &mesh_;
+        const std::vector<Point> &meshLoc_;
+        InputHandler &regressionData_;
 
 		/**
-		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
-		 * @return The estimation of the spatial field at the locations, assumin an anisotropy x.
+		 * @param anisoParam The anisotropy. anisoParam[0] is the angle, anisoParam[1] is the intensity of the anisotropy.
+		 * @return The estimation of the spatial field at the locations, assumin an anisotropy anisoParam.
 		 */
-        const VectorXr fHat(const TVector & x) const;
-
-    private:
-        InputHandler createRegressionData(const TVector & x) const {
-            return static_cast<const Derived*>(this)->createRegressionData(x);
-        }
+        const VectorXr fHat(const TVector &anisoParam) const;
 
     public:
 		/**
@@ -42,32 +37,21 @@ class HBase : public cppoptlib::BoundedProblem<Real, 2> {
 		 * @param regressionData
 		 */
         using typename cppoptlib::BoundedProblem<Real, 2>::TVector;
-        HBase(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, InputHandler & regressionData) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000.)), mesh_(mesh), meshLoc_(meshLoc), regressionData_(regressionData) {}
+        H(const MeshHandler<ORDER, 2, 2> &mesh, const std::vector<Point> &meshLoc, InputHandler &regressionData) : cppoptlib::BoundedProblem<Real, 2>(TVector(0., 1.), TVector(M_PI, 1000.)), mesh_(mesh), meshLoc_(meshLoc), regressionData_(regressionData) {}
 
 		/**
-		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
+		 * @param anisoParam The anisotropy. anisoParam[0] is the angle, anisoParam[1] is the intensity of the anisotropy.
 		 * @return The anisotropy in matrix form.
 		 */
-        static Eigen::Matrix<Real, 2, 2> buildKappa(const TVector & x);
+        static Eigen::Matrix<Real, 2, 2> buildKappa(const TVector &anisoParam);
 
 		/**
-		 * @param x The anisotropy. x[0] is the angle, x[1] is the intensity of the anisotropy.
+		 * @param anisoParam The anisotropy. anisoParam[0] is the angle, anisoParam[1] is the intensity of the anisotropy.
 		 * @return The value of the functional H(K). \cite Bernardi.
 		 */
-        Real value(const TVector & x);
-        void gradient(const TVector & x, TVector & grad) {
-            finiteGradient(x, grad, 0);
-        }
-};
-
-template <typename InputHandler, typename Integrator, UInt ORDER>
-struct H : public HBase<H<InputHandler, Integrator, ORDER>, InputHandler, Integrator, ORDER> {
-        using typename HBase<H, InputHandler, Integrator, ORDER>::TVector;
-        H(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, InputHandler & regressionData) : HBase<H, InputHandler, Integrator, ORDER>(mesh, meshLoc, regressionData) {}
-
-        Real value(const TVector & x) {
-            REprintf("Option not implemented\n");
-            exit(EXIT_FAILURE);
+        Real value(const TVector &anisoParam);
+        void gradient(const TVector &anisoParam, TVector &grad) {
+            finiteGradient(anisoParam, grad, 0);
         }
 };
 

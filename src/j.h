@@ -19,16 +19,16 @@
 template <typename InputHandler, typename Integrator, UInt ORDER>
 class J {
     protected:
-        const MeshHandler<ORDER, 2, 2> & mesh_;
-        const std::vector<Point> & meshLoc_;
-        const InputHandler & regressionData_;
+        const MeshHandler<ORDER, 2, 2> &mesh_;
+        const std::vector<Point> &meshLoc_;
+        const InputHandler &regressionData_;
         MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regression_;
 
     public:
 		/**
 		 * @detail The constructor solves the optimization of the functional J using the fdaPDE package
 		 */
-        J(const MeshHandler<ORDER, 2, 2> & mesh, const std::vector<Point> & meshLoc, const InputHandler & regressionData);
+        J(const MeshHandler<ORDER, 2, 2> &mesh, const std::vector<Point> &meshLoc, const InputHandler &regressionData);
 		
         /**
 		 * @return The vector of GCV indexes for each value of regressionData_.getLambda()

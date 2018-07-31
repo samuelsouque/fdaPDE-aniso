@@ -119,7 +119,7 @@ SEXP FPCA_skeleton(FPCAData &fPCAData, SEXP Rmesh,std::string validation)
 }
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-SEXP anisotropic_regression_skeleton(InputHandler & regressionData, SEXP Rmesh) {
+SEXP anisotropic_regression_skeleton(InputHandler &regressionData, SEXP Rmesh) {
     using TVector = typename H<InputHandler, Integrator, ORDER>::TVector;
     const MeshHandler<ORDER, 2, 2> mesh(Rmesh);
 
@@ -129,9 +129,9 @@ SEXP anisotropic_regression_skeleton(InputHandler & regressionData, SEXP Rmesh) 
 	*/
     const AnisotropicSmoothing<InputHandler, Integrator, ORDER> anisoSmooth(regressionData, mesh);
 
-    const std::pair<const std::vector<VectorXr>, const TVector> & solution = anisoSmooth.smooth();
-    const std::vector<VectorXr> & coefs = std::get<0>(solution);
-    const TVector & kappa = std::get<1>(solution);
+    const std::pair<const std::vector<VectorXr>, const TVector> &solution = anisoSmooth.smooth();
+    const std::vector<VectorXr> &coefs = std::get<0>(solution);
+    const TVector &kappa = std::get<1>(solution);
 
 	// Put the results into an R list for safe return
     if (coefs.empty()) {
@@ -141,14 +141,14 @@ SEXP anisotropic_regression_skeleton(InputHandler & regressionData, SEXP Rmesh) 
     SET_VECTOR_ELT(result, 0, Rf_allocMatrix(REALSXP, coefs[0].size(), coefs.size()));
     SET_VECTOR_ELT(result, 1, Rf_allocVector(REALSXP, 2));
 
-    Real * rans = REAL(VECTOR_ELT(result, 0));
+    Real *rans = REAL(VECTOR_ELT(result, 0));
     for (std::vector<VectorXr>::size_type j=0; j<coefs.size(); j++) {
         for (Eigen::Index i=0; i<coefs[0].size(); i++) {
             rans[i + j*coefs[0].size()] = coefs[j](i);
         }
     }
 
-    Real * rans2 = REAL(VECTOR_ELT(result, 1));
+    Real *rans2 = REAL(VECTOR_ELT(result, 1));
     Eigen::Map<TVector>(rans2, 2) = kappa;
 
     UNPROTECT(1);
@@ -449,18 +449,4 @@ SEXP anisotropic_regression_PDE(SEXP Rlocations, SEXP Robservations, SEXP Rmesh,
     }
 }
 
-SEXP anisotropic_regression_PDE_space_varying(SEXP Rlocations, SEXP Robservations, SEXP Rmesh, SEXP Rorder, SEXP Rmydim, SEXP Rndim, SEXP Rlambda, SEXP RK, SEXP Rbeta, SEXP Rc, SEXP Ru, SEXP Rcovariates, SEXP RBCIndices, SEXP RBCValues, SEXP DOF, SEXP RGCVmethod, SEXP Rnrealizations) {
-    RegressionDataEllipticSpaceVarying regressionData(Rlocations, Robservations, Rorder, Rlambda, RK, Rbeta, Rc, Ru, Rcovariates, RBCIndices, RBCValues, DOF,  RGCVmethod, Rnrealizations);
-
-    UInt mydim = Rf_asInteger(Rmydim);
-    UInt ndim = Rf_asInteger(Rndim);
-
-    if (regressionData.getOrder() == 1 && ndim == 2 && mydim == 2) {
-        return anisotropic_regression_skeleton<RegressionDataEllipticSpaceVarying, IntegratorTriangleP2, 1>(regressionData, Rmesh);
-    } else if (regressionData.getOrder() == 2 && ndim == 2 && mydim == 2) {
-        return anisotropic_regression_skeleton<RegressionDataEllipticSpaceVarying, IntegratorTriangleP4, 2>(regressionData, Rmesh);
-    } else {
-        return R_NilValue;
-    }
-}
 }
