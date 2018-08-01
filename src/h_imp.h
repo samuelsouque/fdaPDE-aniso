@@ -5,7 +5,11 @@
 #include "mixedFERegression.h"
 #include "mesh_objects.h"
 
-#include <chrono>
+template <typename InputHandler, typename Integrator, UInt ORDER>
+typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::lower(0., 1.);
+
+template <typename InputHandler, typename Integrator, UInt ORDER>
+typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::upper(M_PI, 1000.);
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
 Real H<InputHandler, Integrator, ORDER>::value(const TVector &anisoParam) {
@@ -53,6 +57,38 @@ Eigen::Matrix<Real, 2, 2> H<InputHandler, Integrator, ORDER>::buildKappa(const T
     // Kappa = Q * Sigma * Q.inverse()
     Eigen::Matrix<Real, 2, 2> Kappa = Q * Sigma * Q.inverse();
     return Kappa;
+}
+
+template <typename InputHandler, typename Integrator, UInt ORDER>
+void H<InputHandler, Integrator, ORDER>::gradient(const TVector &anisoParam, TVector &grad) {
+    constexpr Real eps = 1e-6;
+    Real epsUsed1, epsUsed2;
+    Real val1, val2;
+    TVector tmp;
+
+    for (Eigen::Index i=0U; i<anisoParam.size(); i++) {
+        tmp = anisoParam;
+
+        tmp(i) += eps;
+        if (tmp(i) > upper(i)) {
+            tmp(i) = upper(i);
+            epsUsed1 = tmp(i) - anisoParam(i);
+        } else {
+            epsUsed1 = eps;
+        }
+        val1 = value(tmp);
+
+        tmp(i) = anisoParam(i) - eps;
+        if (tmp(i) < lower(i)) {
+            tmp(i) = lower(i);
+            epsUsed2 = anisoParam(i) - tmp(i);
+        } else {
+            epsUsed2 = eps;
+        }
+        val2 = value(tmp);
+
+        grad(i) = (val1 - val2) / (epsUsed1 + epsUsed2);
+    }
 }
 
 #endif

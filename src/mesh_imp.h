@@ -18,9 +18,6 @@ MeshHandler<ORDER,2,2>::MeshHandler(SEXP mesh)
 	num_nodes_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 0), R_DimSymbol))[0];
 	num_edges_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 6), R_DimSymbol))[0];
 	num_elements_ = INTEGER(Rf_getAttrib(VECTOR_ELT(mesh_, 3), R_DimSymbol))[0];
-	Rprintf("num_elements_d = %d\n", num_elements_);
-	Rprintf("num_elements_u = %u\n", num_elements_);
-
 }
 #endif
 

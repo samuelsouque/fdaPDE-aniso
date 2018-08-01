@@ -3,10 +3,10 @@
 
 #include <utility>
 #include <algorithm>
-#include "solver/lbfgsbsolver.h"
+#include "R_ext/Applic.h"
 #include "j.h"
 
-#include <chrono>
+//#include <chrono>
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
 std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator, ORDER>::TVector> AnisotropicSmoothing<InputHandler, Integrator, ORDER>::smooth() const {
@@ -21,37 +21,51 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
         // Optimization of H
         regressionData_.setLambda(std::vector<Real>(1U, lambda_[i]));
-        Rprintf("lambda_[%2d] = %f\n", i, lambda_[i]);
+        //Rprintf("lambda_[%2d] = %f\n", i, lambda_[i]);
         H<InputHandler, Integrator, ORDER> h(mesh_, meshLoc_, regressionData_);
 
         if (i != 0U) {
             anisoParamSmooth[i] = anisoParamSmooth[i-1];
         }
-        auto start = std::chrono::high_resolution_clock::now();
-        cppoptlib::LbfgsbSolver<H<InputHandler, Integrator, ORDER>> solver;
-        solver.minimize(h, anisoParamSmooth[i]);
+        //auto start = std::chrono::high_resolution_clock::now();
+        
+        int lmm = 5; // Number of BFGS updates retained 
+        double *lower = H<InputHandler, Integrator, ORDER>::lower.data();
+        double *upper = H<InputHandler, Integrator, ORDER>::upper.data();
+        int nbd[2]; nbd[0] = 2; nbd[1] = 2;// nbd[i]=2 for checking lower and upper bound on i-th variable
+        double val; // Function value
+        int fail; // End status (converged, ...)
+        void *ex = &h; // Extra arguments for the function, here we pass an H instance
+        double factr = 1e7; // Convergence criterion on the objective function
+        double pgtol = 0.; // Convergence criterion on the function gradient
+        int fncount; // Number of function calls
+        int grcount; // Number of gradient calls
+        int maxit = 10000; 
+        char msg[60]; // Additional info
+        int trace = 0; // Type of diagnostic displayed
+        int nREPORT = 10; // Frequency of diagnostic when displayed
+
+        lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
 
         // Dealing with angle periodicity
         if (anisoParamSmooth[i](0) == M_PI) {
             anisoParamSmooth[i](0) = 0.;
-            solver.minimize(h, anisoParamSmooth[i]);
-            REprintf("Angle equal to pi at iteration = %3u\n", i);
+            lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
         }
         if (anisoParamSmooth[i](0) == 0.) {
             anisoParamSmooth[i](0) = M_PI;
-            solver.minimize(h, anisoParamSmooth[i]);
-            REprintf("Angle equal to 0 at iteration = %3u\n", i);
+            lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
         }
         
-        if (!h.isValid(anisoParamSmooth[i])) {
-            REprintf("Optimization failed (value is out of range): (%f, %f)\n", anisoParamSmooth[i](0), anisoParamSmooth[i](1));
-            anisoParamSmooth[i] = anisoParamSmooth[i].cwiseMax(TVector(0., 1.)).cwiseMin(TVector(M_PI, 1000.));
-        }
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> diff = end - start;
-        Rprintf("Final anisoParam [%2d]: (%f, %f)\n", i, anisoParamSmooth[i](0), anisoParamSmooth[i](1));
-        Rprintf("Time to optimize [%2d]: %f\n", i, diff);
-        start = std::chrono::high_resolution_clock::now();
+        //if (fail) {
+        //    REprintf("L-BFGS-B did not converged: %s\n", msg);
+        //}
+
+        //auto end = std::chrono::high_resolution_clock::now();
+        //std::chrono::duration<double> diff = end - start;
+        //Rprintf("Final anisoParam [%2d]: (%f, %f)\n", i, anisoParamSmooth[i](0), anisoParamSmooth[i](1));
+        //Rprintf("Time to optimize [%2d]: %f\n", i, diff);
+        //start = std::chrono::high_resolution_clock::now();
     
         // Computation of the GCV for current anisoParamSmooth[i]
         regressionData_.setLambda(lambdaCrossVal_);
@@ -67,11 +81,11 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
         crossValSmoothInd[i] = lambdaCrossValIndex;
         gcvSmooth[i] = gcv;
 
-        end = std::chrono::high_resolution_clock::now();
-        diff = end - start;
-        Rprintf("Time to compute GCV [%2d]: %f\n", i, diff);
+        //end = std::chrono::high_resolution_clock::now();
+        //diff = end - start;
+        //Rprintf("Time to compute GCV [%2d]: %f\n", i, diff);
     }
-    auto start2 = std::chrono::high_resolution_clock::now();
+    //auto start2 = std::chrono::high_resolution_clock::now();
 
     // Choosing the best anisotropy matrix and lambda coefficient
     std::vector<Real>::const_iterator minIterator = std::min_element(gcvSmooth.cbegin(), gcvSmooth.cend());
@@ -83,13 +97,13 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     
     regressionFinal.apply();
 
-    auto end2 = std::chrono::high_resolution_clock::now();
-    auto end1 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff2 = end2 - start2;
-    std::chrono::duration<double> diff1 = end1 - start1;
+    //auto end2 = std::chrono::high_resolution_clock::now();
+    //auto end1 = std::chrono::high_resolution_clock::now();
+    //std::chrono::duration<double> diff2 = end2 - start2;
+    //std::chrono::duration<double> diff1 = end1 - start1;
 
-    Rprintf("Time to compute final regression: %f\n", diff2);
-    Rprintf("Total time: %f\n", diff1);
+    //Rprintf("Time to compute final regression: %f\n", diff2);
+    //Rprintf("Total time: %f\n", diff1);
 
     return std::make_pair(regressionFinal.getSolution(), anisoParamSmooth[optIndex]);
 }
