@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <algorithm>
+#include <limits>
 #include "R_ext/Applic.h"
 #include "j.h"
 
@@ -13,7 +14,6 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     std::vector<Eigen::Index> crossValSmoothInd(n_lambda);
     std::vector<Real> gcvSmooth(n_lambda);
 
-    //#pragma omp parallel for
     for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
         // Optimization of H
         regressionData_.setLambda(std::vector<Real>(1U, lambda_[i]));
@@ -23,36 +23,33 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
             anisoParamSmooth[i] = anisoParamSmooth[i-1];
         }
         
-        int lmm = 5; // Number of BFGS updates retained 
-        double *lower = H<InputHandler, Integrator, ORDER>::lower.data();
-        double *upper = H<InputHandler, Integrator, ORDER>::upper.data();
-        int nbd[2]; nbd[0] = 2; nbd[1] = 2;// nbd[i]=2 for checking lower and upper bound on i-th variable
+        constexpr int n = 2;
         double val; // Function value
         int fail; // End status (converged, ...)
+        constexpr double abstol = -std::numeric_limits<double>::infinity();
+        constexpr double reltol = std::sqrt(std::numeric_limits<double>::epsilon());
         void *ex = &h; // Extra arguments for the function, here we pass an H instance
-        double factr = 1e7; // Convergence criterion on the objective function
-        double pgtol = 0.; // Convergence criterion on the function gradient
+        constexpr double alpha = 1.;
+        constexpr double beta = 0.; // R's default value is 0.5
+        constexpr double gamma = 2.;
+        constexpr int trace = 0; // Type of diagnostic displayed
         int fncount; // Number of function calls
-        int grcount; // Number of gradient calls
-        int maxit = 10000; 
-        char msg[60]; // Additional info
-        int trace = 0; // Type of diagnostic displayed
-        int nREPORT = 10; // Frequency of diagnostic when displayed
+        constexpr int maxit = 500; 
 
-        lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
+        nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
 
         // Dealing with angle periodicity
         if (anisoParamSmooth[i](0) == M_PI) {
             anisoParamSmooth[i](0) = 0.;
-            lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
+            nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }
         if (anisoParamSmooth[i](0) == 0.) {
             anisoParamSmooth[i](0) = M_PI;
-            lbfgsb(2, lmm, anisoParamSmooth[i].data(), lower, upper, nbd, &val, H<InputHandler, Integrator, ORDER>::fn, H<InputHandler, Integrator, ORDER>::gr, &fail, ex, factr, pgtol, &fncount, &grcount, maxit, msg, trace, nREPORT);
+            nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }
         
         //if (fail) {
-        //    REprintf("L-BFGS-B did not converged: %s\n", msg);
+        //    REprintf("Nelder-Mead did not converged: %s\n", msg);
         //}
 
         // Computation of the GCV for current anisoParamSmooth[i]
