@@ -12,14 +12,20 @@ J<InputHandler, Integrator, ORDER>::J(const MeshHandler<ORDER, 2, 2> &mesh, cons
 template <typename InputHandler, typename Integrator, UInt ORDER>
 VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
     const std::vector<VectorXr> &solution = regression_.getSolution();
-
-    const std::vector<Point> &locations = regressionData_.isLocationsByNodes() ? meshLoc_ : regressionData_.getLocations();
-    
-    EvaluatorExt<ORDER> evaluator(mesh_);
-    const MatrixXr &fnhat = evaluator.eval(solution, locations);
-    
-    Real np = locations.size();
     const std::vector<Real> &edf = regression_.getDOF();
+    const UInt np = regressionData_.getNumberofObservations();
+
+    MatrixXr fnhat(np, solution.size());
+    if (regressionData_.isLocationsByNodes()) {
+        for (std::vector<VectorXr>::size_type i=0U; i<solution.size(); i++) {
+                fnhat.col(i) = solution[i].head(np);
+        }
+    } else {
+        EvaluatorExt<ORDER> evaluator(mesh_);
+        fnhat = evaluator.eval(solution, regressionData_.getLocations());
+    }
+
+    // TODO: manage the non null covariates case
 
     auto test_inconsistent = [&np] (const Real &edf) -> bool { return (np - edf <= 0); };
     std::vector<Real>::const_iterator any_inconsistent = std::find_if(edf.cbegin(), edf.cend(), test_inconsistent);
