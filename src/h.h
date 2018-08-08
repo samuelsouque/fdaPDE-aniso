@@ -35,8 +35,8 @@ class H {
          */
         Real value(const TVector &anisoParam);
         
-        static TVector lower;
-        static TVector upper;
+        static const TVector lower;
+        static const TVector upper;
 
         void gradient(const TVector &anisoParam, TVector &grad);
 
@@ -48,7 +48,7 @@ class H {
             Eigen::Map<const TVector> anisoParam(par);
             TVector grad;
             static_cast<H<InputHandler, Integrator, ORDER>*>(ex) -> gradient(anisoParam, grad);
-            TVector::Map(gr) = grad;
+            Eigen::Map<TVector>{gr} = grad;
         }
 
     private:

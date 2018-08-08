@@ -9,55 +9,63 @@
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
 std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator, ORDER>::TVector> AnisotropicSmoothing<InputHandler, Integrator, ORDER>::smooth() const {
+    using H = H<InputHandler, Integrator, ORDER>;
+
     const std::vector<Real>::size_type n_lambda = lambda_.size();
-    std::vector<TVector, Eigen::aligned_allocator<TVector>> anisoParamSmooth(n_lambda, TVector(M_PI_2, 5.));
+    std::vector<TVector, Eigen::aligned_allocator<TVector>> anisoParamSmooth(n_lambda);
     std::vector<Eigen::Index> crossValSmoothInd(n_lambda);
     std::vector<Real> gcvSmooth(n_lambda);
 
+    constexpr int n = 2;
+    double xin[n] = { M_PI_2, 5. }; // Starting parameter on entry
+    double x[n]; // Final parameter on exit
+    void *ex; // Extra arguments for the function, here we pass an H instance
+    double val; // Final value 
+    int fail; // End status (converged, ...)
+    constexpr double abstol = -std::numeric_limits<double>::infinity();
+    constexpr double reltol = std::sqrt(std::numeric_limits<double>::epsilon());
+    constexpr double alpha = 1.; // Reflection factor for Nelder-Mead
+    constexpr double beta = 0.5; // Contraction factor
+    constexpr double gamma = 2.; // Expansion factor
+    constexpr int trace = 0; // Type of diagnostic displayed
+    int fncount; // Number of function calls
+    constexpr int maxit = 500; 
+    
     for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
         // Optimization of H
         regressionData_.setLambda(std::vector<Real>(1U, lambda_[i]));
-        H<InputHandler, Integrator, ORDER> h(mesh_, meshLoc_, regressionData_);
+        H h(mesh_, meshLoc_, regressionData_);
 
         if (i != 0U) {
-            anisoParamSmooth[i] = anisoParamSmooth[i-1];
+            // Copy anisoParamSmooth[i-1] into xin
+            Eigen::Map<TVector, EIGEN_MAX_ALIGN_BYTES>{xin} = anisoParamSmooth[i-1];
         }
-        
-        constexpr int n = 2;
-        double val; // Function value
-        int fail; // End status (converged, ...)
-        constexpr double abstol = -std::numeric_limits<double>::infinity();
-        constexpr double reltol = std::sqrt(std::numeric_limits<double>::epsilon());
-        void *ex = &h; // Extra arguments for the function, here we pass an H instance
-        constexpr double alpha = 1.;
-        constexpr double beta = 0.; // R's default value is 0.5
-        constexpr double gamma = 2.;
-        constexpr int trace = 0; // Type of diagnostic displayed
-        int fncount; // Number of function calls
-        constexpr int maxit = 500; 
+        ex = &h;
 
-        nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
-
+        nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         // Dealing with angle periodicity
-        if (anisoParamSmooth[i](0) == M_PI) {
-            anisoParamSmooth[i](0) = 0.;
-            nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
+        if (x[0] == H::upper(0)) {
+            xin[0] = H::lower(0);
+            nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }
-        if (anisoParamSmooth[i](0) == 0.) {
-            anisoParamSmooth[i](0) = M_PI;
-            nmmin(n, anisoParamSmooth[i].data(), anisoParamSmooth[i].data(), &val, H<InputHandler, Integrator, ORDER>::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
+        if (x[0] == H::lower(0)) {
+            xin[0] = H::upper(0);
+            nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }
+
+        // Copy x into anisoParamSmooth[i]
+        anisoParamSmooth[i] = Eigen::Map<TVector, EIGEN_MAX_ALIGN_BYTES>(x);
         
-        //if (fail) {
-        //    REprintf("Nelder-Mead did not converged: %s\n", msg);
-        //}
+        if (fail) {
+            REprintf("Nelder-Mead did not converged before %d iterations!\n", maxit);
+        }
 
         // Computation of the GCV for current anisoParamSmooth[i]
         regressionData_.setLambda(lambdaCrossVal_);
         regressionData_.setComputeDOF(true);
         J<InputHandler, Integrator, ORDER> j(mesh_, meshLoc_, regressionData_);
         regressionData_.setComputeDOF(dof_);
-        
+
         VectorXr gcvSeq = j.getGCV();
 
         Eigen::Index lambdaCrossValIndex;
@@ -71,7 +79,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     std::vector<Real>::difference_type optIndex = std::distance(gcvSmooth.cbegin(), minIterator);
 
     regressionData_.setLambda(std::vector<Real>(1U, lambdaCrossVal_[crossValSmoothInd[optIndex]]));
-    regressionData_.setK(H<InputHandler, Integrator, ORDER>::buildKappa(anisoParamSmooth[optIndex]));
+    regressionData_.setK(H::buildKappa(anisoParamSmooth[optIndex]));
     MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regressionFinal(mesh_, regressionData_);
     
     regressionFinal.apply();

@@ -25,12 +25,13 @@ const MatrixXr EvaluatorExt<ORDER>::eval(const std::vector<VectorXr> &solution, 
     MatrixXr result(numLoc, numSol);
 
     for (std::vector<VectorXr>::size_type i=0U; i<numSol; i++) {
-        // Map the values of solution[i] into the coef raw buffer
-        Eigen::Map<VectorXr>(coef, numNodes_) = solution[i].head(numNodes_);
+        // Copy the values of solution[i](1:numNodes_) into the raw buffer coef
+        Eigen::Map<VectorXr>{coef, numNodes_} = solution[i].head(numNodes_);
 
         // Perform the evaluation and assign the result in res
         Evaluator<ORDER, 2, 2>::eval(X, Y, numLoc, coef, 1, true, res, isInside);
 
+        // Copy the values contained in res[1:numLoc] into result(1:numLoc, i)
         result.col(i) = Eigen::Map<VectorXr>(res, numLoc);
     }
 

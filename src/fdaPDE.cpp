@@ -131,7 +131,7 @@ SEXP anisotropic_regression_skeleton(InputHandler &regressionData, SEXP Rmesh) {
 
     const std::pair<const std::vector<VectorXr>, const TVector> &solution = anisoSmooth.smooth();
     const std::vector<VectorXr> &coefs = std::get<0>(solution);
-    const TVector &kappa = std::get<1>(solution);
+    const TVector &anisoParam = std::get<1>(solution);
 
 	// Put the results into an R list for safe return
     if (coefs.empty()) {
@@ -149,7 +149,7 @@ SEXP anisotropic_regression_skeleton(InputHandler &regressionData, SEXP Rmesh) {
     }
 
     Real *rans2 = REAL(VECTOR_ELT(result, 1));
-    Eigen::Map<TVector>(rans2, 2) = kappa;
+    Eigen::Map<TVector>{rans2} = anisoParam;
 
     UNPROTECT(1);
     return result;

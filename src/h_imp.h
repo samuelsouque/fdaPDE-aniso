@@ -6,21 +6,25 @@
 #include "mesh_objects.h"
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::lower(0., 1.);
+const typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::lower(0., 1.);
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
-typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::upper(M_PI, 1000.);
+const typename H<InputHandler, Integrator, ORDER>::TVector H<InputHandler, Integrator, ORDER>::upper(M_PI, 1000.);
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
 Real H<InputHandler, Integrator, ORDER>::value(const TVector &anisoParam) {
-    /*Calculating fHat*/
-    VectorXr estimations = fHat(anisoParam);
+    // Check if parameters are into the optimization range
+    if (((anisoParam - lower).array() < 0.).any() || ((anisoParam - upper).array() > 0.).any()) {
+        return std::numeric_limits<Real>::infinity();
+    } else {
+        /*Calculating fHat*/
+        VectorXr estimations = fHat(anisoParam);
 
-    /* Calculating H */
-    estimations -= regressionData_.getObservations();
-    Real H = estimations.squaredNorm();
-
-    return H;
+        /* Calculating H */
+        estimations -= regressionData_.getObservations();
+        Real H = estimations.squaredNorm();
+        return H;
+    }
 }
 
 template <typename InputHandler, typename Integrator, UInt ORDER>
@@ -50,7 +54,7 @@ Eigen::Matrix<Real, 2, 2> H<InputHandler, Integrator, ORDER>::buildKappa(const T
 
     Eigen::Matrix<Real,2,2> Sigma;
     // Deal with invalid intensity argument
-    Real intensity = std::abs(anisoParam(1));
+    const Real intensity = anisoParam(1);
     Sigma << 1/std::sqrt(intensity), 0., 
           0., intensity/std::sqrt(intensity);
 
