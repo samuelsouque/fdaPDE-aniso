@@ -25,14 +25,14 @@ class J {
         MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regression_;
 
     public:
-		/**
-		 * @detail The constructor solves the optimization of the functional J using the fdaPDE package
-		 */
+    /**
+     * @detail The constructor solves the optimization of the functional J using the fdaPDE package
+     */
         J(const MeshHandler<ORDER, 2, 2> &mesh, const std::vector<Point> &meshLoc, const InputHandler &regressionData);
-		
+
         /**
-		 * @return The vector of GCV indexes for each value of regressionData_.getLambda()
-		 */
+         * @return The vector of GCV indexes for each value of regressionData_.getLambda()
+         */
         VectorXr getGCV() const;
 };
 
