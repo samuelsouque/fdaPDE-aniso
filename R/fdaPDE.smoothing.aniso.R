@@ -47,8 +47,10 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   }
   observations = as.matrix(observations)
   lambda = as.matrix(lambda)
-  if(!is.null(covariates))
-    covariates = as.matrix(covariates)
+  if(!is.null(covariates)) {
+    # covariates = as.matrix(covariates)
+    stop("'covariates' support is not implemented in this method")
+  }
   if(!is.null(BC))
   {
     BC$BC_indices = as.matrix(BC$BC_indices)
@@ -90,8 +92,6 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   fit.FEM  = FEM(f, FEMbasis)
   PDEmisfit.FEM = FEM(g, FEMbasis)
   
-  # beta = getBetaCoefficients(locations, observations, fit.FEM, covariates, TRUE)
-  # reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, kappa = bigsol[[2]])
   reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, kappa = bigsol[[2]])
   return(reslist)
 }

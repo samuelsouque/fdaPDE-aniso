@@ -25,8 +25,6 @@ VectorXr J<InputHandler, Integrator, ORDER>::getGCV() const {
         fnhat = evaluator.eval(solution, regressionData_.getLocations());
     }
 
-    // TODO: manage the non null covariates case
-
     auto test_inconsistent = [&np] (const Real &edf) -> bool { return (np - edf <= 0); };
     std::vector<Real>::const_iterator any_inconsistent = std::find_if(edf.cbegin(), edf.cend(), test_inconsistent);
     if (any_inconsistent != edf.cend()) {
