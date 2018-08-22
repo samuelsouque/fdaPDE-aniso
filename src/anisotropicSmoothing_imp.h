@@ -16,11 +16,12 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     std::vector<Eigen::Index> crossValSmoothInd(n_lambda);
     std::vector<Real> gcvSmooth(n_lambda);
 
+    // set all the parameters for calling the Nelder-Mead algorithm
     constexpr int n = 2;
     double xin[n] = { M_PI_2, 5. }; // Starting parameter on entry
     double x[n]; // Final parameter on exit
     void *ex; // Extra arguments for the function, here we pass an H instance
-    double val; // Final value 
+    double val; // Final value
     int fail; // End status (converged, ...)
     constexpr double abstol = -std::numeric_limits<double>::infinity();
     constexpr double reltol = std::sqrt(std::numeric_limits<double>::epsilon());
@@ -29,8 +30,8 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     constexpr double gamma = 2.; // Expansion factor
     constexpr int trace = 0; // Type of diagnostic displayed
     int fncount; // Number of function calls
-    constexpr int maxit = 500; 
-    
+    constexpr int maxit = 500;
+
     for(std::vector<Real>::size_type i = 0U; i < n_lambda; i++) {
         // Optimization of H
         regressionData_.setLambda(std::vector<Real>(1U, lambda_[i]));
@@ -55,7 +56,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 
         // Copy x into anisoParamSmooth[i]
         anisoParamSmooth[i] = Eigen::Map<TVector, EIGEN_MAX_ALIGN_BYTES>(x);
-        
+
         if (fail) {
             REprintf("Nelder-Mead did not converged before %d iterations!\n", maxit);
         }
@@ -70,7 +71,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 
         Eigen::Index lambdaCrossValIndex;
         Real gcv = gcvSeq.minCoeff(&lambdaCrossValIndex);
-        
+
         crossValSmoothInd[i] = lambdaCrossValIndex;
         gcvSmooth[i] = gcv;
     }
@@ -81,7 +82,7 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
     regressionData_.setLambda(std::vector<Real>(1U, lambdaCrossVal_[crossValSmoothInd[optIndex]]));
     regressionData_.setK(H::buildKappa(anisoParamSmooth[optIndex]));
     MixedFERegression<InputHandler, Integrator, ORDER, 2, 2> regressionFinal(mesh_, regressionData_);
-    
+
     regressionFinal.apply();
 
     return std::make_pair(regressionFinal.getSolution(), anisoParamSmooth[optIndex]);

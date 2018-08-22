@@ -9,24 +9,45 @@
 #' @param covariates not implemented
 #' @param BC not implemented
 #'
-#' @return a list containing the fit, the misfit and the esstimated anisotropy matrix Kappa
+#' @return a list containing the fit, the misfit and the estimated anisotropy matrix Kappa
 #'
 #' @examples
-#' #import the data from package fdaPDE
+#' 
 #' data("MeuseData")
 #' data("MeuseBorder")
-#' # Create and refine a mesh
+#' 
+#' # Choose which variable we wish to predict
+#' zinc <- MeuseData$zinc
+#' # Create a mesh from the data
 #' mesh <- create.MESH.2D(nodes = MeuseData[,c(2,3)], segments = MeuseBorder, order = 1)
+#' plot(mesh)
+#' # Refine the mesh specifying the maximum area
 #' mesh <- refine.MESH.2D(mesh, maximum_area=6000, delaunay=TRUE)
-#' #Call the anisotropic regression function
-#' smoothing_aniso <- aniso.smooth.FEM.PDE.basis(locations = MeuseData[,2:3], 
-#'                                               observations = c(MeuseData$zinc,rep(NA,dim(mesh$nodes)[1]-length(MeuseData$zinc))),
-#'                                               FEMbasis = create.FEM.basis(mesh), 
-#'                                               lambda = 10^seq(1,10,2), 
-#'                                               rho = c(0.01,0.01,0.5,0.9), 
-#'                                               PDE_parameters = list(K = matrix(0, 2, 2), b = c(0, 0), c = 0))
-#' # Display the fitted function: An anisotropy is visible
+#' plot(mesh)
+#' # Create the FEM basis object
+#' FEM_basis <- create.FEM.basis(mesh)
+#' # Choose a set of regularization coefficients
+#' lambda = 10^seq(1,9,3)
+#' # Define the regularization PDE parameters
+#' kappa <- matrix(0, 2, 2) # Initial value of K
+#' PDE_parameters <- list(K = kappa, b = c(0, 0), c = 0)
+#' # SOLVE
+#' smoothing_aniso <- aniso.smooth.FEM.PDE.basis(observations = c(zinc,rep(NA,dim(mesh$nodes)[1]-length(zinc))),FEMbasis = FEM_basis, lambda = lambda, PDE_parameters = PDE_parameters)
+#' # Plot the result
 #' plot(smoothing_aniso$fit.FEM)
+#' # display the anisotropy numerically and graphically
+#' anisotropyMatrix <- function(angle, intensity){
+#'   Q <- matrix(c(cos(angle),-sin(angle),sin(angle),cos(angle)), byrow = TRUE, ncol = 2, nrow = 2)
+#'   Sigma <- matrix(c(1,0,0,intensity), byrow = TRUE, nrow = 2, ncol = 2)/sqrt(intensity)
+#'   return(Q%*%Sigma%*%solve(Q))
+#' }
+#' smoothing_aniso$kappa
+#' anisotropyMatrix(smoothing_aniso$kappa[1],smoothing_aniso$kappa[2])
+#' plot(mesh)
+#' # The ellipse is a graphical representation of the estimated anisotropy
+#' library(car)
+#' ellipse(c(mean(MeuseData$x),mean(MeuseData$y)), shape = anisotropyMatrix(smoothing_aniso$kappa[1],smoothing_aniso$kappa[2]), radius=200, center.pch = 20, col = "blue", center.cex = 1, lwd = 2, lty = 1)
+#' 
 #' 
 #' 
 aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis, lambda, PDE_parameters, covariates = NULL, BC = NULL, GCV = FALSE, CPP_CODE = TRUE, GCVmethod = 1, nrealizations = 100) {
@@ -92,6 +113,8 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   fit.FEM  = FEM(f, FEMbasis)
   PDEmisfit.FEM = FEM(g, FEMbasis)
   
+  # beta = getBetaCoefficients(locations, observations, fit.FEM, covariates, TRUE)
+  # reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, kappa = bigsol[[2]])
   reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, kappa = bigsol[[2]])
   return(reslist)
 }

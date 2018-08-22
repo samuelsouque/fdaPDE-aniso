@@ -8,7 +8,7 @@
 
 /**
  * @file anisotropicSmoothing.h
- * @brief contains the class template AnisotropicSmoothingBase implementing the main algorithm
+ * @brief contains the class template AnisotropicSmoothing implementing the main algorithm
  */
 
 /**
@@ -27,6 +27,12 @@ class AnisotropicSmoothing {
         const std::vector<Real> lambdaCrossVal_;
         bool dof_;
 
+        /**
+         * @brief gives the area&size-normalized vector of regularization coefficients. It is used to initialize the attribute lambdaCrossVal_
+         * @param n_obs an UInt giving the number of datapoints available
+         * @param area a Real giving the area of the mesh of the problem
+         * @return a sequence of normalized regularization coefficients
+         */
         std::vector<Real> seq(const UInt &n_obs, const Real &area) const;
 
     public:
@@ -47,8 +53,8 @@ class AnisotropicSmoothing {
         }
 
 		/**
-		 * @brief executes the anisotropic smoothing algorithm for the problem described in the class attributes
-		 * @return the first element of the pair is the vector of solution coefficients, the second element is the estimated anisotropy matrix
+		 * @brief executes the anisotropic smoothing algorithm for the problem described by the class attributes
+		 * @return the first element of the pair is the vector of solution coefficients, the second element is the estimated anisotropy matrix: The angle and the intensity
 		 */
         std::pair<const std::vector<VectorXr>, const TVector> smooth() const;
 };

@@ -8,7 +8,7 @@
 
 /**
  *	@file h.h
- *	@brief contains the class declaration of the functional H(K).
+ *	@brief contains the class declaration of the functional H(K) \cite Bernardi.
  */
 
 /**
@@ -34,7 +34,7 @@ class H {
          * @return The value of the functional H(K). \cite Bernardi.
          */
         Real value(const TVector &anisoParam);
-        
+
         static const TVector lower;
         static const TVector upper;
 
@@ -52,10 +52,6 @@ class H {
         }
 
     private:
-        /**
-         * @param mesh TODO
-         * @param regressionData
-         */
         const MeshHandler<ORDER, 2, 2> &mesh_;
         const std::vector<Point> &meshLoc_;
         InputHandler &regressionData_;
