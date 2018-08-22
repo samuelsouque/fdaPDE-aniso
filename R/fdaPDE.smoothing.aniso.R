@@ -42,11 +42,11 @@
 #'   return(Q%*%Sigma%*%solve(Q))
 #' }
 #' smoothing_aniso$kappa
-#' anisotropyMatrix(smoothing_aniso$kappa[1],smoothing_aniso$kappa[2])
+#' anisotropyMatrix(smoothing_aniso$anisotrpy[1],smoothing_aniso$anisotropy[2])
 #' plot(mesh)
 #' # The ellipse is a graphical representation of the estimated anisotropy
 #' library(car)
-#' ellipse(c(mean(MeuseData$x),mean(MeuseData$y)), shape = anisotropyMatrix(smoothing_aniso$kappa[1],smoothing_aniso$kappa[2]), radius=200, center.pch = 20, col = "blue", center.cex = 1, lwd = 2, lty = 1)
+#' ellipse(c(mean(MeuseData$x),mean(MeuseData$y)), shape = anisotropyMatrix(smoothing_aniso$anisotropy[1],smoothing_aniso$anisotropy[2]), radius=200, center.pch = 20, col = "blue", center.cex = 1, lwd = 2, lty = 1)
 #' 
 #' 
 #' 
@@ -114,7 +114,7 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   PDEmisfit.FEM = FEM(g, FEMbasis)
   
   # beta = getBetaCoefficients(locations, observations, fit.FEM, covariates, TRUE)
-  # reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, kappa = bigsol[[2]])
-  reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, kappa = bigsol[[2]])
+  # reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, anisotropy = bigsol[[2]])
+  reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, anisotropy = bigsol[[2]])
   return(reslist)
 }
