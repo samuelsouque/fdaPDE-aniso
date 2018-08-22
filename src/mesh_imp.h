@@ -256,7 +256,7 @@ void MeshHandler<ORDER,2,3>::importfromCSV(std::string &filename){
 		ss>>points_[3*i+1];
 		ss>>comma;
 		ss>>points_[3*i+2];
-	};
+	}
 
 	getline(file,line); //skip a white line
 
@@ -275,10 +275,10 @@ void MeshHandler<ORDER,2,3>::importfromCSV(std::string &filename){
 		ss>>point_index;
 		elements_[i*3+2] = --point_index;
 
-	};
+	}
 
 
-};
+}
 
 
 template <UInt ORDER>
