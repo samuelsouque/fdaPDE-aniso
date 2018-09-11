@@ -41,7 +41,7 @@
 #'   Sigma <- matrix(c(1,0,0,intensity), byrow = TRUE, nrow = 2, ncol = 2)/sqrt(intensity)
 #'   return(Q%*%Sigma%*%solve(Q))
 #' }
-#' smoothing_aniso$kappa
+#' smoothing_aniso$anisotrpy
 #' anisotropyMatrix(smoothing_aniso$anisotrpy[1],smoothing_aniso$anisotropy[2])
 #' plot(mesh)
 #' # The ellipse is a graphical representation of the estimated anisotropy
