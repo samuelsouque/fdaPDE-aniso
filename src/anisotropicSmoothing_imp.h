@@ -45,11 +45,11 @@ std::pair<const std::vector<VectorXr>, const typename H<InputHandler, Integrator
 
         nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         // Dealing with angle periodicity
-        if (x[0] == H::upper(0)) {
+        if (std::abs(x[0] - H::upper(0)) < 1e-4) {
             xin[0] = H::lower(0);
             nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }
-        if (x[0] == H::lower(0)) {
+        if (std::abs(x[0] - H::lower(0)) < 1e-4) {
             xin[0] = H::upper(0);
             nmmin(n, xin, x, &val, H::fn, &fail, abstol, reltol, ex, alpha, beta, gamma, trace, &fncount, maxit);
         }

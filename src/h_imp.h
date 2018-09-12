@@ -53,7 +53,7 @@ Eigen::Matrix<Real, 2, 2> H<InputHandler, Integrator, ORDER>::buildKappa(const T
           std::sin(anisoParam(0)), std::cos(anisoParam(0));
 
     Eigen::Matrix<Real,2,2> Sigma;
-    // Deal with invalid intensity argument
+
     const Real intensity = anisoParam(1);
     Sigma << 1/std::sqrt(intensity), 0., 
           0., intensity/std::sqrt(intensity);
