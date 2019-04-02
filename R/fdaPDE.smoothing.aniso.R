@@ -113,8 +113,7 @@ aniso.smooth.FEM.PDE.basis <- function(locations = NULL, observations, FEMbasis,
   fit.FEM  = FEM(f, FEMbasis)
   PDEmisfit.FEM = FEM(g, FEMbasis)
   
-  # beta = getBetaCoefficients(locations, observations, fit.FEM, covariates, TRUE)
-  # reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, anisotropy = bigsol[[2]])
-  reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, anisotropy = bigsol[[2]])
+  beta = getBetaCoefficients(locations, observations, fit.FEM, covariates, TRUE)
+  reslist=list(fit.FEM=fit.FEM,PDEmisfit.FEM=PDEmisfit.FEM, beta = beta, anisotropy = bigsol[[2]])
   return(reslist)
 }
